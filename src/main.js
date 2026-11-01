@@ -1,20 +1,22 @@
-import express from "express"
+
+import app from "./app.js";
 import configService from "./config/config.service.js";
 import dbConnection from "./database/connection.js";
-const app = express();
-const port = configService.port
 
-await dbConnection()
+const startServer = async () => {
+  try {
+    await dbConnection();
 
-app.get("/",(req,res,next)=>{
-    res.status(200).json({
-        message : "hello world"
-    })
-})
+    app.listen(configService.port, () => {
+      console.log(
+        `Server is running on port ${configService.port}`
+      );
+    });
 
+  } catch (error) {
+    console.error("Application startup failed:", error.message);
+    process.exit(1);
+  }
+};
 
-app.listen(port,()=>{
-    console.log(`server is running on port ${port}`)
-})
- 
- 
+startServer();

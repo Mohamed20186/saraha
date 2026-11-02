@@ -35,6 +35,10 @@ const userSchema = new mongoose.Schema(
       enum: Object.values(gender),
       default : gender.Male
     },
+    phone : {
+        type : String ,
+        required  :true
+    }
   },
   {
     timestamps: true,

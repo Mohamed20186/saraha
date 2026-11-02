@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema(
       type: Number,
       required: true,
       enum: Object.values(gender),
+      default : gender.Male
     },
   },
   {
@@ -49,6 +50,16 @@ const userSchema = new mongoose.Schema(
     },
   }
 );
+
+userSchema.virtual("userName").set(function(value){
+    let [firstName,LastNamed] = value.split(" ")
+    this.firstName = firstName,
+    this.lastName = this.lastName
+}).get(function(){
+    return `${this.firstName} ${this.lastName} `
+})
+
+
 
 const User = mongoose.model("User", userSchema);
 

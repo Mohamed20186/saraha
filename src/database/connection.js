@@ -23,7 +23,7 @@ const dbConnection = async () => {
       serverSelectionTimeoutMS: 10000,
       maxPoolSize: 10,
     });
-
+    await mongoose.syncIndexes()
     console.log("MongoDB connected successfully!");
     console.log(`Database: ${mongoose.connection.name}`);
     console.log(`Host: ${mongoose.connection.host}`);

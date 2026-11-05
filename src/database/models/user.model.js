@@ -68,6 +68,5 @@ userSchema.virtual("userName").set(function(value){
 
 
 
-const User = mongoose.model("User", userSchema);
+export const User = mongoose.model("User", userSchema);
 
-export default User;

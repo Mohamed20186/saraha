@@ -1,1 +1,1 @@
-import authController from "./auth/auth.controller.js"
+import {authController} from "./auth/auth.controller.js"

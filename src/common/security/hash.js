@@ -24,9 +24,20 @@ export const hashPassword = async ({
   }
 };
 
-export const comparePassword = async ({ plainText, hashedPassword }) => {
+export const comparePassword = async ({
+  plainText,
+  hashedPassword,
+  lib = hashEnum.bcrypt,
+}) => {
   if (typeof plainText !== "string" || typeof hashedPassword !== "string") {
     throw new TypeError("Invalid password data");
   }
-  return await compare(plainText, hashedPassword);
+  switch (lib) {
+    case hashEnum.bcrypt:
+      return await compare(plainText, hashedPassword);
+      break;
+    case hashEnum.argon:
+      return await argon2.verify(hashedPassword, plainText);
+      break;
+  }
 };

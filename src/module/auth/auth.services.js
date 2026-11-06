@@ -19,6 +19,7 @@ export const login = async (data) => {
   const plainTextPass = await security.comparePassword({
     plainText: data.password,
     hashedPassword: userExists.password,
+    lib : hashEnum.argon
   });
   if (!plainTextPass) {
     throw exceptions.notFound("Invalid email or password");

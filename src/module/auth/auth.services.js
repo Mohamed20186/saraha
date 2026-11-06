@@ -1,5 +1,6 @@
 import { exceptions } from "../../common/exceptions/index.js";
 import { hashEnum, security } from "../../common/index.js";
+import { encryptData } from "../../common/security/encryption.js";
 import { User } from "../../database/index.js";
 
 export const signup = async (data) => {
@@ -8,6 +9,7 @@ export const signup = async (data) => {
     throw exceptions.conflict("user already exists");
   }
   data.password = await security.hashPassword({ plainText: data.password , lib : hashEnum.argon });
+  data.phone = await encryptData({plainText:data.phone})
   return await User.create(data);
 };
 

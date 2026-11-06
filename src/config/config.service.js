@@ -11,5 +11,8 @@ dotenv.config({
 export default {
     port : Number( process.env.PORT || 3000 ), 
     db_url : process.env.DB_URL , 
-    bcryptSaltRounds : Number(process.env.BCRYPT_SALT_ROUNDS || 10)
+    bcryptSaltRounds : Number(process.env.BCRYPT_SALT_ROUNDS || 10),
+    ENC_KEY : process.env.ENC_KEY,
+    ENC_IV_LENGTH : Number(process.env.ENC_IV_LENGTH || 16),
+    ALGORITHM : process.env.ALGORITHM
 }

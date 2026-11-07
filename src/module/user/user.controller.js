@@ -36,4 +36,16 @@ userController.get("/profile", async (req, res, next) => {
 });
 
 
+userController.patch("/profile", async (req, res, next) => {
+  try {
+    const user = await updateUser(token, req.body);
 
+    response({
+      res,
+      data: user,
+      message: "Profile updated successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+});

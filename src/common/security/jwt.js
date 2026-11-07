@@ -6,10 +6,10 @@ export const createToken = ({
     options = {},
     secret = configService.JWT_SECRET
 }) => {
-    const nbfTime = 5 * 60
+    const nbfTime = 20 * 60
     return jwt.sign(payload, secret, {
         expiresIn: 30 + nbfTime,
-        notBefore: nbfTime,
+     //   notBefore: nbfTime,
         ...options
     });
 };

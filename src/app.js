@@ -7,6 +7,7 @@ const app = express();
 
 app.use(express.json());
 app.use("/auth",authController)
+
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,

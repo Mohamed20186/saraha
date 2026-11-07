@@ -12,7 +12,6 @@ export const response = ({
         data,
     };
 
-    // Add meta only when it exists
     if (meta !== undefined) {
         responseBody.meta = meta;
     }

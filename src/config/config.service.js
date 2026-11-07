@@ -14,5 +14,6 @@ export default {
     bcryptSaltRounds : Number(process.env.BCRYPT_SALT_ROUNDS || 10),
     ENC_KEY : process.env.ENC_KEY,
     ENC_IV_LENGTH : Number(process.env.ENC_IV_LENGTH || 16),
-    ALGORITHM : process.env.ALGORITHM
+    ALGORITHM : process.env.ALGORITHM ,
+    JWT_SECRET : process.env.JWT_SECRET,
 }

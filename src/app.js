@@ -2,11 +2,12 @@
 import express from "express";
 import { errorHandler } from "./common/index.js";
 import { authController } from "./module/auth/auth.controller.js";
-
+import { userController } from "./module/user/user.controller.js";
 const app = express();
 
 app.use(express.json());
 app.use("/auth",authController)
+app.use("/user",userController)
 
 app.get("/", (req, res) => {
   res.status(200).json({

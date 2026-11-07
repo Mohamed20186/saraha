@@ -2,7 +2,11 @@ import { exceptions } from "../../common/exceptions/index.js";
 import { hashEnum, security } from "../../common/index.js";
 import { encryptData } from "../../common/security/encryption.js";
 import { User } from "../../database/index.js";
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
+import configService from "../../config/config.service.js";
+import { createToken } from "../../common/security/index.js";
+
+
 export const signup = async (data) => {
   let userExists = await User.findOne({ email: data.email });
   if (userExists) {
@@ -26,6 +30,10 @@ export const login = async (data) => {
   if (!plainTextPass) {
     throw exceptions.notFound("Invalid email or password");
   }
-  const token= jwt.sign({sub : userExists.id},"mo546@@eq#")
+  const token= createToken({options : {
+    subject : userExists.id ,
+    issuer : "mohamed",
+    audience : ["admin , users"]
+  }})
   return token;
 };

@@ -33,14 +33,14 @@ const userSchema = new mongoose.Schema(
       type: Number,
       required: true,
       enum: Object.values(gender),
-      default : gender.Male
+      default: gender.Male
     },
-    phone : {
-        type : String ,
+    phone: {
+      type: String,
     },
-    password : {
-        type : String ,
-        required  :true
+    password: {
+      type: String,
+      required: true
     }
   },
   {
@@ -58,12 +58,12 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-userSchema.virtual("userName").set(function(value){
-    let [firstName,LastNamed] = value.split(" ")
-    this.firstName = firstName,
+userSchema.virtual("userName").set(function (value) {
+  let [firstName, LastNamed] = value.split(" ")
+  this.firstName = firstName,
     this.lastName = this.lastName
-}).get(function(){
-    return `${this.firstName} ${this.lastName} `
+}).get(function () {
+  return `${this.firstName} ${this.lastName} `
 })
 
 

@@ -1,16 +1,8 @@
-import jwt from "jsonwebtoken";
 import { User } from "../../database/models/user.model.js";
-import configService from "../../config/config.service.js";
-import { verifyToken } from "../../common/security/index.js";
 
-const getAuthenticatedUser = async (token) => {
-  const decoded = verifyToken({ token });
-
-  if (!decoded?.sub) {
-    throw new Error("Invalid token");
-  }
-
-  const user = await User.findById(decoded.sub).select("-password");
+// Get user by ID
+const getUserById = async (userId) => {
+  const user = await User.findById(userId).select("-password");
 
   if (!user) {
     throw new Error("User not found");
@@ -19,21 +11,24 @@ const getAuthenticatedUser = async (token) => {
   return user;
 };
 
-export const profile = async (token) => {
-   return await getAuthenticatedUser(token)
+// Get profile
+export const profile = async (userId) => {
+  return await getUserById(userId);
 };
 
+// Update profile
+export const updateUser = async (userId, data) => {
+  const user = await getUserById(userId);
 
-
-export const updateUser = async (token, data) => {
-  const user = await getAuthenticatedUser(token);
   const allowedFields = ["firstName", "lastName", "phone"];
+
   for (const key of allowedFields) {
     if (data[key] !== undefined) {
       user[key] = data[key];
     }
   }
-  await user.save();
-   return user;
 
+  await user.save();
+
+  return user;
 };

@@ -2,22 +2,28 @@ import jwt from "jsonwebtoken";
 import configService from "../../config/config.service.js";
 
 export const createToken = ({
-    payload = {},
-    options = {},
-    secret = configService.JWT_SECRET
+  payload = {},
+  accessOptions = {},
+  refreshOptions = {},
 }) => {
-    const nbfTime = 20 * 60
-    return jwt.sign(payload, secret, {
-        expiresIn: 30 + nbfTime,
-     //   notBefore: nbfTime,
-        ...options
-    });
+  const accessSecret = configService.JWT_ACCESS_SECRET;
+  const refreshSecret = configService.JWT_REFRESH_SECRET;
+  const accessToken = jwt.sign(payload, accessSecret, {
+    expiresIn: configService.ACCESS_EXPIRES_IN,
+    algorithm: configService.TOKEN_ALGORITHM,
+    ...accessOptions,
+  });
+  const refreshToken = jwt.sign(payload, refreshSecret, {
+    expiresIn: configService.REFRESH_EXPIRES_IN,
+    algorithm: configService.TOKEN_ALGORITHM,
+    ...refreshOptions,
+  });
+  return {
+    accessToken,
+    refreshToken,
+  };
 };
 
-
-export const verifyToken = ({
-    token,
-    secret = configService.JWT_SECRET
-}) => {
-    return jwt.verify(token, secret);
+export const verifyToken = ({ token, secret = configService.JWT_ACCESS_SECRET }) => {
+  return jwt.verify(token, secret);
 };

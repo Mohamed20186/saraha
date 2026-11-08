@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import configService from "../../config/config.service.js";
+import { TokenType } from "../enums/tokenType.enum.js";
 
 export const createToken = ({
   payload = {},
@@ -24,6 +25,11 @@ export const createToken = ({
   };
 };
 
-export const verifyToken = ({ token, secret = configService.JWT_ACCESS_SECRET }) => {
+const getSecret = (tokenType)=>{
+    return tokenType == TokenType.accessTokenType ? configService.JWT_ACCESS_SECRET : configService.JWT_REFRESH_SECRET
+}
+
+export const verifyToken = ({ token, tokenType = TokenType.accessTokenType }) => {
+  const secret = getSecret(tokenType)
   return jwt.verify(token, secret);
 };

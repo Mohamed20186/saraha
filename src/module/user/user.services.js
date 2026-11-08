@@ -11,12 +11,10 @@ const getUserById = async (userId) => {
   return user;
 };
 
-// Get profile
 export const profile = async (userId) => {
   return await getUserById(userId);
 };
 
-// Update profile
 export const updateUser = async (userId, data) => {
   const user = await getUserById(userId);
 

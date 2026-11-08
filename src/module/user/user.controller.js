@@ -2,10 +2,11 @@ import { Router } from "express";
 import * as us from "./user.services.js";
 import { response } from "../../common/index.js";
 import { authenticate } from "../../common/middleware/auth.middleware.js";
+import { TokenType } from "../../common/enums/tokenType.enum.js";
 
 export const userController = Router();
 
-userController.get("/profile", authenticate, async (req, res, next) => {
+userController.get("/profile", authenticate({tokenType : TokenType.accessTokenType}), async (req, res, next) => {
   try {
     const user = await us.profile(req.auth.sub);
 

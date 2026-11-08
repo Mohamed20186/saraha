@@ -30,10 +30,17 @@ export const login = async (data) => {
   if (!plainTextPass) {
     throw exceptions.notFound("Invalid email or password");
   }
-  const token= createToken({options : {
+  const token= createToken({accessOptions : {
     subject : userExists.id ,
     issuer : "mohamed",
     audience : ["admin , users"]
-  }})
+  },
+  refreshOptions : {
+    subject : userExists.id ,
+    issuer : "RAhim",
+    audience : ["admin"] 
+  },
+
+})
   return token;
 };

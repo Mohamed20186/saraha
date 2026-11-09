@@ -59,22 +59,22 @@ export const rotateToken = (refreshToken) => {
   let accessExpIn = configService.ACCESS_EXPIRES_IN * 1000
   let accessExpAt = accessIAT + accessExpIn
   let currTime = Date.now()
-  if( currTime < accessExpAt < -  5000){
+  if( currTime < accessExpAt){
     throw exceptions.conflict("access token still valid")
   }
 
-  return {
-    accessIAT ,
-    accessExpIn ,
-    accessExpAt ,
-    currTime ,
-  }
-  // return createToken({
-  //   accessOptions: {
-  //     subject: decoded.sub,
-  //   },
-  //   refreshOptions: {
-  //     subject: decoded.sub,
-  //   },
-  // });
+  // return {
+  //   accessIAT ,
+  //   accessExpIn ,
+  //   accessExpAt ,
+  //   currTime ,
+  // }
+  return createToken({
+    accessOptions: {
+      subject: decoded.sub,
+    },
+    refreshOptions: {
+      subject: decoded.sub,
+    },
+  });
 };

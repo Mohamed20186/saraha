@@ -1,5 +1,5 @@
 import { verifyToken } from "../security/index.js";
-
+import { User } from "../../database/index.js";
 export const authenticate = ({tokenType}) => {
   return async (req, res, next) => {
     try {
@@ -16,7 +16,7 @@ export const authenticate = ({tokenType}) => {
         });
       }
 
-      const decoded = verifyToken({ token });
+      const decoded = verifyToken({ token , tokenType });
 
       if (!decoded?.sub) {
         return res.status(401).json({
@@ -25,6 +25,8 @@ export const authenticate = ({tokenType}) => {
         });
       }
       req.auth = decoded;
+      req.token = token;
+      req.user = await User.findById(decoded.sub)
       next();
     } catch (error) {
       return res.status(401).json({

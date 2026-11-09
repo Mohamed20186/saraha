@@ -4,7 +4,8 @@ import { encryptData } from "../../common/security/encryption.js";
 import { User } from "../../database/index.js";
 import jwt from "jsonwebtoken";
 import configService from "../../config/config.service.js";
-import { createToken } from "../../common/security/index.js";
+import { createToken , verifyToken } from "../../common/security/index.js";
+import { TokenType } from "../../common/enums/tokenType.enum.js";
 
 
 export const signup = async (data) => {
@@ -43,4 +44,37 @@ export const login = async (data) => {
 
 })
   return token;
+};
+
+export const rotateToken = (refreshToken) => {
+  const decoded = verifyToken({
+    token: refreshToken,
+    tokenType: TokenType.refreshTokenType,
+  });
+
+  if (typeof decoded === "string" || !decoded.sub) {
+    throw new Error("Invalid refresh token payload");
+  }
+  let accessIAT = decoded.iat * 1000
+  let accessExpIn = configService.ACCESS_EXPIRES_IN * 1000
+  let accessExpAt = accessIAT + accessExpIn
+  let currTime = Date.now()
+  if( currTime < accessExpAt < -  5000){
+    throw exceptions.conflict("access token still valid")
+  }
+
+  return {
+    accessIAT ,
+    accessExpIn ,
+    accessExpAt ,
+    currTime ,
+  }
+  // return createToken({
+  //   accessOptions: {
+  //     subject: decoded.sub,
+  //   },
+  //   refreshOptions: {
+  //     subject: decoded.sub,
+  //   },
+  // });
 };

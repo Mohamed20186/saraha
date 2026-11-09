@@ -1,6 +1,8 @@
 import { Router } from "express";
 import * as as from "./auth.services.js";
 import { response } from "../../common/index.js";
+import { authenticate } from "../../common/middleware/auth.middleware.js";
+import { TokenType } from "../../common/enums/tokenType.enum.js";
 
 export const authController = Router();
 
@@ -14,10 +16,9 @@ authController.post("/signup", async (req, res, next) => {
       message: "user created successfully........",
     });
   } catch (error) {
-    next(error)
+    next(error);
   }
 });
-
 
 authController.post("/login", async (req, res, next) => {
   try {
@@ -29,6 +30,23 @@ authController.post("/login", async (req, res, next) => {
       message: "user logged",
     });
   } catch (error) {
-    next(error)
+    next(error);
   }
 });
+authController.post(
+  "/rotate-token",
+  authenticate({ tokenType: TokenType.refreshTokenType }),
+  async (req, res, next) => {
+    try {
+      let user = await as.rotateToken(req.token);
+      response({
+        res,
+        data: user,
+        statusCode: 200,
+        message: "user logged",
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);

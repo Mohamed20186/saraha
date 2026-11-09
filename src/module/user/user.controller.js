@@ -21,7 +21,7 @@ userController.get("/profile", authenticate({tokenType : TokenType.accessTokenTy
   }
 });
 
-userController.patch("/profile", authenticate, async (req, res, next) => {
+userController.patch("/profile", authenticate({tokenType : TokenType.accessTokenType}), async (req, res, next) => {
   try {
     const user = await us.updateUser(req.auth.sub, req.body);
 

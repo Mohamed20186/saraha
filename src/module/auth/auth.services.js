@@ -4,7 +4,7 @@ import { encryptData } from "../../common/security/encryption.js";
 import { User } from "../../database/index.js";
 import jwt from "jsonwebtoken";
 import configService from "../../config/config.service.js";
-import { createToken , verifyToken } from "../../common/security/index.js";
+import { createToken, verifyToken } from "../../common/security/index.js";
 import { TokenType } from "../../common/enums/tokenType.enum.js";
 
 
@@ -13,8 +13,8 @@ export const signup = async (data) => {
   if (userExists) {
     throw exceptions.conflict("user already exists");
   }
-  data.password = await security.hashPassword({ plainText: data.password , lib : hashEnum.argon });
-  data.phone = await encryptData({plainText:data.phone})
+  data.password = await security.hashPassword({ plainText: data.password, lib: hashEnum.argon });
+  data.phone = await encryptData({ plainText: data.phone })
   return await User.create(data);
 };
 
@@ -26,23 +26,25 @@ export const login = async (data) => {
   const plainTextPass = await security.comparePassword({
     plainText: data.password,
     hashedPassword: userExists.password,
-    lib : hashEnum.argon
+    lib: hashEnum.argon
   });
   if (!plainTextPass) {
     throw exceptions.notFound("Invalid email or password");
   }
-  const token= createToken({accessOptions : {
-    subject : userExists.id ,
-    issuer : "mohamed",
-    audience : ["admin , users"]
-  },
-  refreshOptions : {
-    subject : userExists.id ,
-    issuer : "RAhim",
-    audience : ["admin"] 
-  },
+  const token = createToken({
+    role: userExists.role,
+    accessOptions: {
+      subject: userExists.id,
+      issuer: `${userExists.role}`,
+      audience: [userExists.role]
+    },
+    refreshOptions: {
+      subject: userExists.id,
+      issuer: `${userExists.role}`,
+      audience: [userExists.role]
+    },
 
-})
+  })
   return token;
 };
 
@@ -59,7 +61,7 @@ export const rotateToken = (refreshToken) => {
   let accessExpIn = configService.ACCESS_EXPIRES_IN * 1000
   let accessExpAt = accessIAT + accessExpIn
   let currTime = Date.now()
-  if( currTime < accessExpAt){
+  if (currTime < accessExpAt) {
     throw exceptions.conflict("access token still valid")
   }
 

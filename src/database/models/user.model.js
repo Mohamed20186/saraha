@@ -1,6 +1,6 @@
 
 import mongoose from "mongoose";
-import { gender } from "../../common/enums/index.js";
+import { gender, ROLE } from "../../common/enums/index.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -27,6 +27,12 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
       match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Invalid email address"],
+    },
+    role: {
+      type: Number,
+      required: true,
+      enum: Object.values(ROLE),
+      default: ROLE.USER
     },
 
     gender: {

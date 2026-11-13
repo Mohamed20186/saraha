@@ -1,8 +1,8 @@
 
-import { verifyToken } from "../security/index.js";
+import { verifyToken, comparePassword } from "../security/index.js";
 import { User } from "../../database/index.js";
 import { AUTH_ENUM } from "../enums/auth.enum.js";
-import bcrypt from "bcrypt";
+import { hashEnum } from "../enums/hash.enum.js";
 
 export const authenticate = ({ tokenType }) => {
   return async (req, res, next) => {
@@ -88,10 +88,11 @@ export const authenticate = ({ tokenType }) => {
           }
 
           // Compare password with stored hash
-          const isPasswordValid = await bcrypt.compare(
-            password,
-            user.password
-          );
+          const isPasswordValid = await comparePassword({
+            plainText: password,
+            hashedPassword: user.password,
+            lib: hashEnum.argon,
+          });
 
           if (!isPasswordValid) {
             return res.status(401).json({

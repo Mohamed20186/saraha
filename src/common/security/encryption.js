@@ -15,7 +15,7 @@ const getEncryptionKey = () => {
   return key;
 };
 
-// Encryption
+
 export const encryptData = ({ plainText }) => {
   if (typeof plainText !== "string") {
     throw new TypeError("Data must be a string");

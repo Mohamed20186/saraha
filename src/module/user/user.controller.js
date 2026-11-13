@@ -1,7 +1,7 @@
 import { Router } from "express";
 import * as us from "./user.services.js";
 import { response } from "../../common/index.js";
-import { authenticate } from "../../common/middleware/auth.middleware.js";
+import { authenticate } from "../../common/middleware/authentication.middleware.js";
 import { TokenType } from "../../common/enums/tokenType.enum.js";
 import { authorize } from "../../common/middleware/authorization.middleware.js";
 import { ROLE } from "../../common/enums/role.enum.js";

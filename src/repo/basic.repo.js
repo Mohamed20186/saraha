@@ -74,6 +74,7 @@ export const updateById = async ({
   let query = model.findByIdAndUpdate(id, data, {
     new: true,
     runValidators: true,
+    returnDocuments:"after",
     ...updateOptions,
   });
 

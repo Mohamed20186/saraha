@@ -1,57 +1,134 @@
 
 import { verifyToken } from "../security/index.js";
 import { User } from "../../database/index.js";
+import { AUTH_ENUM } from "../enums/auth.enum.js";
+import bcrypt from "bcrypt";
 
 export const authenticate = ({ tokenType }) => {
   return async (req, res, next) => {
     try {
-      const authHeader = req.headers.authorization;
+      const authorization = req.headers.authorization;
 
-      const token = authHeader?.startsWith("Bearer ")
-        ? authHeader.slice(7).trim()
-        : null;
-
-      if (!token) {
+      if (!authorization) {
         return res.status(401).json({
           success: false,
-          message: "Authorization token is required",
+          message: "Authorization header is required",
         });
       }
 
-      const decoded = verifyToken({
-        token,
-        tokenType
-      });
+      // Extract scheme and credentials
+      const [scheme, ...credentialsParts] = authorization
+        .trim()
+        .split(/\s+/);
 
-      if (!decoded?.sub) {
+      const credentials = credentialsParts.join(" ");
+
+      if (!credentials) {
         return res.status(401).json({
           success: false,
-          message: "Invalid token",
+          message: "Authorization credentials are required",
         });
       }
 
-      const user = await User.findById(decoded.sub).select("-password");
+      let user;
 
-      if (!user) {
-        return res.status(401).json({
-          success: false,
-          message: "User not found",
-        });
+      switch (scheme.toLowerCase()) {
+        case AUTH_ENUM.BEARER: {
+          const decoded = verifyToken({
+            token: credentials,
+            tokenType,
+          });
+
+          if (!decoded?.sub) {
+            return res.status(401).json({
+              success: false,
+              message: "Invalid token",
+            });
+          }
+
+          user = await User.findById(decoded.sub).select("-password");
+
+          if (!user) {
+            return res.status(401).json({
+              success: false,
+              message: "User not found",
+            });
+          }
+
+          req.auth = decoded;
+          req.token = credentials;
+
+          break;
+        }
+
+        case AUTH_ENUM.BASIC: {
+          const decodedCredentials = Buffer
+            .from(credentials, "base64")
+            .toString("utf8");
+
+          const separatorIndex = decodedCredentials.indexOf(":");
+
+          if (separatorIndex === -1) {
+            return res.status(401).json({
+              success: false,
+              message: "Invalid Basic credentials",
+            });
+          }
+
+          const email = decodedCredentials.slice(0, separatorIndex);
+          const password = decodedCredentials.slice(separatorIndex + 1);
+
+          user = await User.findOne({ email }).select("+password");
+
+          if (!user) {
+            return res.status(401).json({
+              success: false,
+              message: "Invalid email or password",
+            });
+          }
+
+          // Compare password with stored hash
+          const isPasswordValid = await bcrypt.compare(
+            password,
+            user.password
+          );
+
+          if (!isPasswordValid) {
+            return res.status(401).json({
+              success: false,
+              message: "Invalid email or password",
+            });
+          }
+
+          req.auth = {
+            sub: user._id,
+            scheme: AUTH_ENUM.BASIC,
+          };
+
+          // Do not expose password hash
+          user = user.toObject();
+          delete user.password;
+
+          break;
+        }
+
+        default:
+          return res.status(401).json({
+            success: false,
+            message: "Unsupported authorization scheme",
+          });
       }
 
-      req.auth = decoded;
-      req.token = token;
       req.user = user;
 
-      next();
+      return next();
 
     } catch (error) {
-
       console.error("AUTH ERROR:", error.name, error.message);
 
       return res.status(401).json({
         success: false,
-        message: "Invalid or expired token",
+        message: "Invalid or expired credentials",
       });
     }
   };

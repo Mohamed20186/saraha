@@ -84,6 +84,10 @@ const getSecret = ({tokenType, role}) => {
   }
 };
 
+
+
+
+
 export const verifyToken = ({
   token,
   tokenType = TokenType.accessTokenType

@@ -18,6 +18,8 @@ export const signup = async (data) => {
   return await User.create(data);
 };
 
+
+
 export const login = async (data) => {
   let userExists = await User.findOne({ email: data.email });
   if (!userExists) {
@@ -48,6 +50,8 @@ export const login = async (data) => {
   return token;
 };
 
+
+
 export const rotateToken = (refreshToken) => {
   const decoded = verifyToken({
     token: refreshToken,
@@ -65,12 +69,6 @@ export const rotateToken = (refreshToken) => {
     throw exceptions.conflict("access token still valid")
   }
 
-  // return {
-  //   accessIAT ,
-  //   accessExpIn ,
-  //   accessExpAt ,
-  //   currTime ,
-  // }
   return createToken({
     accessOptions: {
       subject: decoded.sub,

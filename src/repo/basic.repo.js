@@ -1,156 +1,222 @@
 
-
-export const create = async ({ model, data }) => {
-  return await model.create(data);
-};
+export default (model) => {
 
 
-
-export const find = async ({
-  model,
-  filter = {},
-  projection = null,
-  options = {},
-}) => {
-  let query = model.find(filter, projection);
-
-  if (options.select) query.select(options.select);
-  if (options.populate) query.populate(options.populate);
-  if (options.sort) query.sort(options.sort);
-
-  if (options.skip !== undefined) query.skip(options.skip);
-  if (options.limit !== undefined) query.limit(options.limit);
-
-  if (options.lean) query.lean();
-
-  return await query;
-};
+  const create = async ({ data }) => {
+    return await model.create(data);
+  };
 
 
 
-export const findOne = async ({
-  model,
-  filter = {},
-  projection = null,
-  options = {},
-}) => {
-  let query = model.findOne(filter, projection);
+  const find = async ({
+    filter = {},
+    projection = null,
+    options = {},
+  }) => {
+    let query = model.find(filter, projection);
 
-  if (options.select) query.select(options.select);
-  if (options.populate) query.populate(options.populate);
-  if (options.sort) query.sort(options.sort);
-  if (options.lean) query.lean();
+    if (options.select) query.select(options.select);
+    if (options.populate) query.populate(options.populate);
+    if (options.sort) query.sort(options.sort);
 
-  return await query;
-};
+    if (options.skip !== undefined) query.skip(options.skip);
+    if (options.limit !== undefined) query.limit(options.limit);
 
+    if (options.lean) query.lean();
 
-
-export const findById = async ({
-  model,
-  id,
-  projection = null,
-  options = {},
-}) => {
-  let query = model.findById(id, projection);
-
-  if (options.select) query.select(options.select);
-  if (options.populate) query.populate(options.populate);
-  if (options.lean) query.lean();
-
-  return await query;
-};
+    return await query;
+  };
 
 
 
-export const updateById = async ({
-  model,
-  id,
-  data,
-  options = {},
-}) => {
-  const { populate, ...updateOptions } = options;
+  const paginate = async ({
+    filter = {},
+    projection = null,
+    options = {},
+  }) => {
 
-  let query = model.findByIdAndUpdate(id, data, {
-    new: true,
-    runValidators: true,
-    returnDocuments:"after",
-    ...updateOptions,
-  });
+    const {
+      page: pageInput,
+      limit: limitInput,
+      ...findOptions
+    } = options;
 
-  if (populate) query.populate(populate);
+    const page = Math.max(
+      Number.parseInt(pageInput, 10) || 1,
+      1
+    );
 
-  return await query;
-};
+    const requestedLimit = Math.max(
+      Number.parseInt(limitInput, 10) || 10,
+      1
+    );
 
+    const limit = Math.min(requestedLimit, 100);
 
-export const updateOne = async ({
-  model,
-  filter = {},
-  data,
-  options = {},
-}) => {
-  const { populate, ...updateOptions } = options;
+    const skip = (page - 1) * limit;
 
-  let query = model.findOneAndUpdate(filter, data, {
-    new: true,
-    runValidators: true,
-    ...updateOptions,
-  });
+    const [data, totalItems] = await Promise.all([
+      find({
+        filter,
+        projection,
+        options: {
+          ...findOptions,
+          skip,
+          limit,
+        },
+      }),
 
-  if (populate) query.populate(populate);
+      model.countDocuments(filter),
+    ]);
 
-  return await query;
-};
+    const totalPages = Math.ceil(totalItems / limit);
 
-
-
-export const deleteById = async ({ model, id }) => {
-  return await model.findByIdAndDelete(id);
-};
-
-
-
-export const deleteOne = async ({
-  model,
-  filter = {},
-}) => {
-  return await model.deleteOne(filter);
-};
-
-
-
-export const count = async ({
-  model,
-  filter = {},
-}) => {
-  return await model.countDocuments(filter);
-};
-
-
-export const bulk = async ({
-  model,
-  data,
-  options = {},
-}) => {
-  return await model.insertMany(data, options);
-};
+    return {
+      data,
+      pagination: {
+        totalItems,
+        totalPages,
+        currentPage: page,
+        limit,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+        nextPage: page < totalPages ? page + 1 : null,
+        previousPage: page > 1 ? page - 1 : null,
+      },
+    };
+  };
 
 
 
-export const exists = async ({
-  model,
-  filter = {},
-}) => {
-  return await model.exists(filter);
-};
+  const findOne = async ({
+    filter = {},
+    projection = null,
+    options = {},
+  }) => {
+    let query = model.findOne(filter, projection);
+
+    if (options.select) query.select(options.select);
+    if (options.populate) query.populate(options.populate);
+    if (options.sort) query.sort(options.sort);
+
+    if (options.lean) query.lean();
+
+    return await query;
+  };
 
 
 
-export const bulkWrite = async ({
-  model,
-  operations,
-  options = {},
-}) => {
-  return await model.bulkWrite(operations, options);
+  const findById = async ({
+    id,
+    projection = null,
+    options = {},
+  }) => {
+    let query = model.findById(id, projection);
+
+    if (options.select) query.select(options.select);
+    if (options.populate) query.populate(options.populate);
+
+    if (options.lean) query.lean();
+
+    return await query;
+  };
+
+
+
+  const updateById = async ({
+    id,
+    data,
+    options = {},
+  }) => {
+    const { populate, ...updateOptions } = options;
+
+    let query = model.findByIdAndUpdate(id, data, {
+      returnDocument: "after",
+      runValidators: true,
+      ...updateOptions,
+    });
+
+    if (populate) query.populate(populate);
+
+    return await query;
+  };
+
+
+
+  const updateOne = async ({
+    filter = {},
+    data,
+    options = {},
+  }) => {
+    const { populate, ...updateOptions } = options;
+
+    let query = model.findOneAndUpdate(filter, data, {
+      returnDocument: "after",
+      runValidators: true,
+      ...updateOptions,
+    });
+
+    if (populate) query.populate(populate);
+
+    return await query;
+  };
+
+
+
+  const deleteById = async ({ id }) => {
+    return await model.findByIdAndDelete(id);
+  };
+
+
+  const deleteOne = async ({ filter = {} }) => {
+    return await model.deleteOne(filter);
+  };
+
+
+  // ==================== COUNT ====================
+
+  const count = async ({ filter = {} }) => {
+    return await model.countDocuments(filter);
+  };
+
+
+  // ==================== BULK ====================
+
+  const bulk = async ({ data, options = {} }) => {
+    return await model.insertMany(data, options);
+  };
+
+
+  const bulkWrite = async ({
+    operations,
+    options = {},
+  }) => {
+    return await model.bulkWrite(operations, options);
+  };
+
+
+  // ==================== EXISTS ====================
+
+  const exists = async ({ filter = {} }) => {
+    return await model.exists(filter);
+  };
+
+
+
+  return {
+    create,
+    find,
+    paginate,
+    findOne,
+    findById,
+    updateById,
+    updateOne,
+    deleteById,
+    deleteOne,
+    count,
+    bulk,
+    bulkWrite,
+    exists,
+  };
+
 };

@@ -1,7 +1,22 @@
+import { ZodError } from "zod";
 
 export const errorHandler = (err, req, res, next) => {
   if (res.headersSent) {
     return next(err);
+  }
+
+   if (err instanceof ZodError) {
+
+    const errors = err.issues.map((issue) => ({
+      field: issue.path.join("."),
+      message: issue.message,
+    }));
+
+    return res.status(400).json({
+      success: false,
+      message: "Validation failed",
+      errors,
+    });
   }
 
   const statusCode = Number(err.statusCode || err.status);

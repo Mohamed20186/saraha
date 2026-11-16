@@ -1,27 +1,27 @@
 import { exceptions } from "../../common/exceptions/index.js";
 import { hashEnum, security } from "../../common/index.js";
 import { encryptData } from "../../common/security/encryption.js";
-import { User } from "../../database/index.js";
-import jwt from "jsonwebtoken";
 import configService from "../../config/config.service.js";
 import { createToken, verifyToken } from "../../common/security/index.js";
 import { TokenType } from "../../common/enums/tokenType.enum.js";
+import { userRepo } from "../../repo/user.repo.js";
 
 
 export const signup = async (data) => {
-  let userExists = await User.findOne({ email: data.email });
+  let userExists = await userRepo.findOne({ filter: { email: data.email }, projection: { email: 1 } })
   if (userExists) {
     throw exceptions.conflict("user already exists");
   }
   data.password = await security.hashPassword({ plainText: data.password, lib: hashEnum.argon });
   data.phone = await encryptData({ plainText: data.phone })
-  return await User.create(data);
+  return await userRepo.create({data : data})
+  
 };
 
 
 
 export const login = async (data) => {
-  let userExists = await User.findOne({ email: data.email });
+    let userExists = await userRepo.findOne({filter: {email : data.email}})
   if (!userExists) {
     throw exceptions.notFound("Invalid email or password");
   }
@@ -33,7 +33,7 @@ export const login = async (data) => {
   if (!plainTextPass) {
     throw exceptions.notFound("Invalid email or password");
   }
-  const token = createToken({
+  const tokens = createToken({
     role: userExists.role,
     accessOptions: {
       subject: userExists.id,
@@ -47,7 +47,7 @@ export const login = async (data) => {
     },
 
   })
-  return token;
+  return tokens;
 };
 
 

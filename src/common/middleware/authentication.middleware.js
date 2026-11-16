@@ -1,8 +1,8 @@
 
 import { verifyToken, comparePassword } from "../security/index.js";
-import { User } from "../../database/index.js";
 import { AUTH_ENUM } from "../enums/auth.enum.js";
 import { hashEnum } from "../enums/hash.enum.js";
+import { userRepo } from "../../repo/user.repo.js";
 
 export const authenticate = ({ tokenType }) => {
   return async (req, res, next) => {
@@ -46,7 +46,7 @@ export const authenticate = ({ tokenType }) => {
             });
           }
 
-          user = await User.findById(decoded.sub).select("-password");
+          user = await userRepo.findById(decoded.sub).select("-password");
 
           if (!user) {
             return res.status(401).json({
@@ -78,7 +78,7 @@ export const authenticate = ({ tokenType }) => {
           const email = decodedCredentials.slice(0, separatorIndex);
           const password = decodedCredentials.slice(separatorIndex + 1);
 
-          user = await User.findOne({ email }).select("+password");
+          user = await userRepo.findOne({ email }).select("+password");
 
           if (!user) {
             return res.status(401).json({

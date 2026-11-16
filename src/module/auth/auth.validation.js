@@ -10,7 +10,7 @@ const genderValues = Object.values(gender).filter(
   (value) => typeof value === "number"
 );
 
-export const signupSchema = loginSchema.extend({
+export const signupSchema = loginSchema.safeExtend({
   firstName: z.string().trim().min(3).max(50),
 
   lastName: z.string().trim().min(3).max(50),
@@ -23,4 +23,72 @@ export const signupSchema = loginSchema.extend({
       message: "Invalid gender",
     })
     .optional(),
+
+  confirmPassword: z.string().min(8),
+}).superRefine((data, ctx) => {
+
+  if (data.password !== data.confirmPassword) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Passwords don't match",
+      path: ["confirmPassword"],
+    });
+  }
+
+  if (
+    data.phone !== undefined &&
+    !/^01[0125]\d{8}$/.test(data.phone)
+  ) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Invalid Egyptian phone number",
+      path: ["phone"],
+    });
+  }
+
+  if (!/[A-Z]/.test(data.password)) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Password must contain at least one uppercase letter",
+      path: ["password"],
+    });
+  }
+
+  if (!/[a-z]/.test(data.password)) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Password must contain at least one lowercase letter",
+      path: ["password"],
+    });
+  }
+
+  if (!/\d/.test(data.password)) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Password must contain at least one number",
+      path: ["password"],
+    });
+  }
+
+  if (!/[^A-Za-z0-9\s]/.test(data.password)) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Password must contain a special character",
+      path: ["password"],
+    });
+  }
+
+  const normalizedPassword = data.password.toLowerCase();
+
+  if (
+    normalizedPassword.includes(data.firstName.toLowerCase()) ||
+    normalizedPassword.includes(data.lastName.toLowerCase())
+  ) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Password must not contain your name",
+      path: ["password"],
+    });
+  }
+
 });

@@ -4,16 +4,13 @@ import { response } from "../../common/index.js";
 import { authenticate } from "../../common/middleware/authentication.middleware.js";
 import { TokenType } from "../../common/enums/tokenType.enum.js";
 import { loginSchema, signupSchema } from "./auth.validation.js";
+import { validation } from "../../common/middleware/index.js";
 
 export const authController = Router();
 
-authController.post("/signup", async (req, res, next) => {
+authController.post("/signup", validation(signupSchema), async (req, res, next) => {
   try {
-    const result = signupSchema.safeParse(req.body)
-     if (!result.success) {
-      return next(result.error);
-    }
-    const user = await as.signup(result.data);
+    const user = await as.signup(req.validate);
     response({
       res,
       data: user,
@@ -25,14 +22,9 @@ authController.post("/signup", async (req, res, next) => {
   }
 });
 
-authController.post("/login", async (req, res, next) => {
+authController.post("/login",validation(loginSchema), async (req, res, next) => {
   try {
-    const result = loginSchema.safeParse(req.body);
-
-    if (!result.success) {
-      return next(result.error);
-    }
-    const user = await as.login(result.data);
+    const user = await as.login(req.validate);
     response({
       res,
       data: user,

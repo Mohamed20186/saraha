@@ -62,8 +62,7 @@ userController.patch("/profile", authenticate({tokenType : TokenType.accessToken
 
 userController.get("/user-profile/:userId", validation(userProfileSchema) , async (req, res, next) => {
   try {
-    const user = await us.getUserById(req.params.userId);
-
+    const user = await us.getUserById(req.validate.params.userId);
     response({
       res,
       data: user,

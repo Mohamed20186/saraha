@@ -1,8 +1,8 @@
 import { User } from "../../database/models/user.model.js";
 import { userRepo } from "../../repo/user.repo.js";
 // Get user by ID
-const getUserById = async (userId) => {
-  const user = await userRepo.findById(userId).select("-password");
+export const getUserById = async (userId) => {
+  const user = await userRepo.findById({id:userId,projection : {password:0}});
 
   if (!user) {
     throw new Error("User not found");
@@ -14,6 +14,8 @@ const getUserById = async (userId) => {
 export const profile = async (userId) => {
   return await getUserById(userId);
 };
+
+
 
 export const updateUser = async (userId, data) => {
   const user = await getUserById(userId);

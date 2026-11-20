@@ -1,19 +1,28 @@
 
-import { stringbool, z } from "zod";
+import { z } from "zod";
 import { gender } from "../../common/enums/gender.enum.js";
+import gf from "../../common/utils/generalFildes.js";
+
+
 const genderValues = Object.values(gender).filter(
   (value) => typeof value === "number"
 );
+
+
 export const loginBodySchema = z.strictObject({
-  email: z.email(),
-  password: z.string().min(8),
+  email: gf.email,
+  password: gf.password,
 });
+
+
 export const signupBodySchema = loginBodySchema.safeExtend({
-  firstName: z.string().trim().min(3).max(50),
+  password: gf.strongPassword,
 
-  lastName: z.string().trim().min(3).max(50),
+  firstName: gf.firstName,
 
-  phone: z.string().trim().optional(),
+  lastName: gf.lastName,
+
+  phone: gf.egyptianPhone.optional(),
 
   gender: z
     .number()
@@ -23,8 +32,9 @@ export const signupBodySchema = loginBodySchema.safeExtend({
     })
     .optional(),
 
-  confirmPassword: z.string().min(8),
+  confirmPassword: gf.password,
 }).superRefine((data, ctx) => {
+
 
   if (data.password !== data.confirmPassword) {
     ctx.addIssue({
@@ -34,48 +44,9 @@ export const signupBodySchema = loginBodySchema.safeExtend({
     });
   }
 
-  if (
-    data.phone !== undefined &&
-    !/^01[0125]\d{8}$/.test(data.phone)
-  ) {
-    ctx.addIssue({
-      code: "custom",
-      message: "Invalid Egyptian phone number",
-      path: ["phone"],
-    });
-  }
 
- 
-  if (!/[A-Z]/.test(data.password)) {
-    ctx.addIssue({
-      code: "custom",
-      message: "Password must contain at least one uppercase letter",
-      path: ["password"],
-    });
-  }
-  if (!/[a-z]/.test(data.password)) {
-    ctx.addIssue({
-      code: "custom",
-      message: "Password must contain at least one lowercase letter",
-      path: ["password"],
-    });
-  }
-  if (!/\d/.test(data.password)) {
-    ctx.addIssue({
-      code: "custom",
-      message: "Password must contain at least one number",
-      path: ["password"],
-    });
-  }
-
-  if (!/[^A-Za-z0-9\s]/.test(data.password)) {
-    ctx.addIssue({
-      code: "custom",
-      message: "Password must contain a special character",
-      path: ["password"],
-    });
-  }
   const normalizedPassword = data.password.toLowerCase();
+
   if (
     normalizedPassword.includes(data.firstName.toLowerCase()) ||
     normalizedPassword.includes(data.lastName.toLowerCase())
@@ -89,16 +60,11 @@ export const signupBodySchema = loginBodySchema.safeExtend({
 
 });
 
+
 export const loginSchema = z.object({
   body: loginBodySchema,
-  
 });
+
 export const signupSchema = z.object({
   body: signupBodySchema,
-  query : stringbool(
-    {
-      truthy : ["true"],
-      falsy :["false"]
-    }
-  )
 });

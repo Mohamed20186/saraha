@@ -1,4 +1,4 @@
-export { gender , hashEnum , ROLE , AUTH_ENUM } from "./enums/index.js";
+export { gender , hashEnum , ROLE , AUTH_ENUM , langEnum } from "./enums/index.js";
 export { errorHandler } from "./middleware/errorHandler.middleware.js";
 export { response } from "./utils/index.js";
 export * as exceptions from "./exceptions/index.js"

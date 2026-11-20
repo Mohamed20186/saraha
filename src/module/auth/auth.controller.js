@@ -10,12 +10,12 @@ export const authController = Router();
 
 authController.post("/signup", validation(signupSchema), async (req, res, next) => {
   try {
-    const user = await as.signup(req.validate);
+    const user = await as.signup(req.validate.body);
     response({
       res,
       data: user,
       statusCode: 201,
-      message: "user created successfully........",
+      message: req.t("auth.signup.success"),
     });
   } catch (error) {
     next(error);
@@ -24,12 +24,12 @@ authController.post("/signup", validation(signupSchema), async (req, res, next) 
 
 authController.post("/login",validation(loginSchema), async (req, res, next) => {
   try {
-    const user = await as.login(req.validate);
+    const user = await as.login(req.validate.body);
     response({
       res,
       data: user,
       statusCode: 200,
-      message: "user logged",
+      message: req.t("auth.login.success"),
     });
 
   } catch (error) {
@@ -48,7 +48,7 @@ authController.post(
         res,
         data: user,
         statusCode: 200,
-        message: "user logged",
+        message: req.t("auth.rotateToken.success"),
       });
     } catch (error) {
       next(error);

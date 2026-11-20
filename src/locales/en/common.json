@@ -1,0 +1,31 @@
+{
+    "validation": {
+        "required": "This field is required",
+        "string": "Value must be a string",
+        "passwordMin": "Password must be at least {{min}} characters",
+        "passwordUppercase": "Password must contain an uppercase letter",
+        "passwordLowercase": "Password must contain a lowercase letter",
+        "passwordNumber": "Password must contain a number",
+        "passwordSpecial": "Password must contain a special character",
+        "firstNameMin": "First name must be at least {{min}} characters",
+        "firstNameMax": "First name cannot exceed {{max}} characters",
+        "lastNameMin": "Last name must be at least {{min}} characters",
+        "lastNameMax": "Last name cannot exceed {{max}} characters",
+        "invalidPhone": "Invalid Egyptian phone number",
+        "emailInvalid": "Invalid email address",
+        "invalidGender": "Invalid gender",
+        "passwordMismatch": "Passwords do not match",
+        "passwordContainsName": "Password must not contain your name"
+    },
+    "auth": {
+        "signup": {
+            "success": "Account created successfully"
+        },
+        "login": {
+            "success": "Logged in successfully"
+        },
+        "rotateToken": {
+            "success": "Token refreshed successfully"
+        }
+    }
+}

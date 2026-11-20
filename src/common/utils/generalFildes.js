@@ -1,37 +1,67 @@
 import { z } from "zod";
 
-const generalFields = {
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters"),
+const generalFields = (t) => {
+  const requiredString = () =>
+    z.string({
+      error: (issue) =>
+        issue.input === undefined
+          ? t("validation.required")
+          : t("validation.string"),
+    });
 
-  strongPassword: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[A-Z]/, "Password must contain an uppercase letter")
-    .regex(/[a-z]/, "Password must contain a lowercase letter")
-    .regex(/\d/, "Password must contain a number")
-    .regex(
-      /[^A-Za-z0-9\s]/,
-      "Password must contain a special character"
-    ),
+  return {
+    password: requiredString().min(8, {
+      error: t("validation.passwordMin", { min: 8 }),
+    }),
 
-  firstName: z.string().trim().min(3).max(50),
+    strongPassword: requiredString()
+      .min(8, {
+        error: t("validation.passwordMin", { min: 8 }),
+      })
+      .regex(/[A-Z]/, {
+        error: t("validation.passwordUppercase"),
+      })
+      .regex(/[a-z]/, {
+        error: t("validation.passwordLowercase"),
+      })
+      .regex(/\d/, {
+        error: t("validation.passwordNumber"),
+      })
+      .regex(/[^A-Za-z0-9\s]/, {
+        error: t("validation.passwordSpecial"),
+      }),
 
-  lastName: z.string().trim().min(3).max(50),
+    firstName: requiredString()
+      .trim()
+      .min(3, {
+        error: t("validation.firstNameMin", { min: 3 }),
+      })
+      .max(50, {
+        error: t("validation.firstNameMax", { max: 50 }),
+      }),
 
-  egyptianPhone: z
-    .string()
-    .trim()
-    .regex(/^01[0125]\d{8}$/, "Invalid Egyptian phone number"),
+    lastName: requiredString()
+      .trim()
+      .min(3, {
+        error: t("validation.lastNameMin", { min: 3 }),
+      })
+      .max(50, {
+        error: t("validation.lastNameMax", { max: 50 }),
+      }),
 
-  email: z
-    .string()
-    .trim()
-    .regex(
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-      "Invalid email address"
-    ),
+    egyptianPhone: requiredString()
+      .trim()
+      .regex(/^01[0125]\d{8}$/, {
+        error: t("validation.invalidPhone"),
+      }),
+
+    email: z.email({
+      error: (issue) =>
+        issue.input === undefined
+          ? t("validation.required")
+          : t("validation.emailInvalid"),
+    }),
+  };
 };
 
 export default generalFields;

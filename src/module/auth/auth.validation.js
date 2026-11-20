@@ -1,70 +1,76 @@
-
 import { z } from "zod";
 import { gender } from "../../common/enums/gender.enum.js";
 import gf from "../../common/utils/generalFildes.js";
-
 
 const genderValues = Object.values(gender).filter(
   (value) => typeof value === "number"
 );
 
+// Login Body Schema
+export const loginBodySchema = (t) => {
+  const fields = gf(t);
 
-export const loginBodySchema = z.strictObject({
-  email: gf.email,
-  password: gf.password,
-});
+  return z.strictObject({
+    email: fields.email,
+    password: fields.password,
+  });
+};
 
+// Signup Body Schema
+export const signupBodySchema = (t) => {
+  const fields = gf(t);
 
-export const signupBodySchema = loginBodySchema.safeExtend({
-  password: gf.strongPassword,
+  return loginBodySchema(t)
+    .safeExtend({
+      password: fields.strongPassword,
 
-  firstName: gf.firstName,
+      firstName: fields.firstName,
 
-  lastName: gf.lastName,
+      lastName: fields.lastName,
 
-  phone: gf.egyptianPhone.optional(),
+      phone: fields.egyptianPhone.optional(),
 
-  gender: z
-    .number()
-    .int()
-    .refine((value) => genderValues.includes(value), {
-      error: "Invalid gender",
+      gender: z
+        .number()
+        .int()
+        .refine((value) => genderValues.includes(value), {
+          error: t("validation.invalidGender"),
+        })
+        .optional(),
+
+      confirmPassword: fields.password,
     })
-    .optional(),
+    .superRefine((data, ctx) => {
+      if (data.password !== data.confirmPassword) {
+        ctx.addIssue({
+          code: "custom",
+          message: t("validation.passwordMismatch"),
+          path: ["confirmPassword"],
+        });
+      }
 
-  confirmPassword: gf.password,
-}).superRefine((data, ctx) => {
+      const normalizedPassword = data.password.toLowerCase();
 
-
-  if (data.password !== data.confirmPassword) {
-    ctx.addIssue({
-      code: "custom",
-      message: "Passwords don't match",
-      path: ["confirmPassword"],
+      if (
+        normalizedPassword.includes(data.firstName.toLowerCase()) ||
+        normalizedPassword.includes(data.lastName.toLowerCase())
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          message: t("validation.passwordContainsName"),
+          path: ["password"],
+        });
+      }
     });
-  }
+};
 
+// Complete Schemas
+export const loginSchema = (t) =>
+  z.object({
+    body: loginBodySchema(t),
+  });
 
-  const normalizedPassword = data.password.toLowerCase();
-
-  if (
-    normalizedPassword.includes(data.firstName.toLowerCase()) ||
-    normalizedPassword.includes(data.lastName.toLowerCase())
-  ) {
-    ctx.addIssue({
-      code: "custom",
-      message: "Password must not contain your name",
-      path: ["password"],
-    });
-  }
-
-});
-
-
-export const loginSchema = z.object({
-  body: loginBodySchema,
-});
-
-export const signupSchema = z.object({
-  body: signupBodySchema,
-});
+export const signupSchema = (t) =>
+  z.object({
+    body: signupBodySchema(t),
+  });

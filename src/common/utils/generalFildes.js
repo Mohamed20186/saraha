@@ -25,7 +25,13 @@ const generalFields = {
     .trim()
     .regex(/^01[0125]\d{8}$/, "Invalid Egyptian phone number"),
 
-  email: z.email(),
+  email: z
+    .string()
+    .trim()
+    .regex(
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      "Invalid email address"
+    ),
 };
 
 export default generalFields;

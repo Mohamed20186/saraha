@@ -1,5 +1,5 @@
 
-import { z } from "zod";
+import { stringbool, z } from "zod";
 import { gender } from "../../common/enums/gender.enum.js";
 const genderValues = Object.values(gender).filter(
   (value) => typeof value === "number"
@@ -26,7 +26,6 @@ export const signupBodySchema = loginBodySchema.safeExtend({
   confirmPassword: z.string().min(8),
 }).superRefine((data, ctx) => {
 
-  // Password Confirmation
   if (data.password !== data.confirmPassword) {
     ctx.addIssue({
       code: "custom",
@@ -92,7 +91,14 @@ export const signupBodySchema = loginBodySchema.safeExtend({
 
 export const loginSchema = z.object({
   body: loginBodySchema,
+  
 });
 export const signupSchema = z.object({
   body: signupBodySchema,
+  query : stringbool(
+    {
+      truthy : ["true"],
+      falsy :["false"]
+    }
+  )
 });

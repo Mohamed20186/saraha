@@ -30,6 +30,7 @@ const dbConnection = async () => {
       await client.connect();
     }
 
+    console.log("Redis connected successfully.");
 
     return mongoose.connection;
 

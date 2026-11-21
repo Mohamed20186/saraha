@@ -6,4 +6,9 @@ export {
 export {
     createToken,
     verifyToken
-} from "./jwt.js"
+} from "./jwt.js";
+
+export {
+    encryptData,
+    decryptData
+} from "./encryption.js";

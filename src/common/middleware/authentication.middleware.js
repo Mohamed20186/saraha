@@ -46,7 +46,10 @@ export const authenticate = ({ tokenType }) => {
             });
           }
 
-          user = await userRepo.findById(decoded.sub).select("-password");
+          user = await userRepo.findById({
+            id: decoded.sub,
+            projection: { password: 0 },
+          });
 
           if (!user) {
             return res.status(401).json({
@@ -78,7 +81,10 @@ export const authenticate = ({ tokenType }) => {
           const email = decodedCredentials.slice(0, separatorIndex);
           const password = decodedCredentials.slice(separatorIndex + 1);
 
-          user = await userRepo.findOne({ email }).select("+password");
+          user = await userRepo.findOne({
+            filter: { email },
+            options: { select: "+password" },
+          });
 
           if (!user) {
             return res.status(401).json({

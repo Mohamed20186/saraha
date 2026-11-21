@@ -1,4 +1,4 @@
-import { client } from "../../database/redis.connection.js";
+import { client } from "../../database/connections/redis.connection.js";
 
 export const setCache = async ({ key, value, ttl = 60 }) => {
   const serializedValue = JSON.stringify(value);

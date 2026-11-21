@@ -1,6 +1,6 @@
 
 import mongoose from "mongoose";
-import configService from "../config/config.service.js";
+import configService from "../../config/config.service.js";
 import { client } from "./redis.connection.js";
 
 mongoose.connection.on("disconnected", () => {

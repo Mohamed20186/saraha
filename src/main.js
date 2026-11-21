@@ -2,8 +2,8 @@
 import app from "./app.js";
 import { setCache } from "./common/service/cashe.service.js";
 import configService from "./config/config.service.js";
-import dbConnection from "./database/connection.js";
-import { client } from "./database/redis.connection.js";
+import dbConnection from "./database/connections/connection.js";
+import { client } from "./database/connections/redis.connection.js";
 
 const startServer = async () => {
   try {

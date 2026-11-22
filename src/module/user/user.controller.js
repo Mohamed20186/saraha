@@ -28,7 +28,7 @@ userController.get("/profile", authenticate({tokenType : TokenType.accessTokenTy
 userController.get(
   "/admin-profile",
   authenticate({ tokenType: TokenType.accessTokenType }),
-  authorize([ROLE.ADMIN]),
+  authorize(ROLE.ADMIN),
   async (req, res, next) => {
     try {
       const user = await us.profile(req.auth.sub);

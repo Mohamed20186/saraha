@@ -1,23 +1,34 @@
 
 import jwt from "jsonwebtoken";
+import { randomUUID } from "node:crypto";
+
 import configService from "../../config/config.service.js";
 import { TokenType } from "../enums/tokenType.enum.js";
 import { ROLE } from "../enums/role.enum.js";
+
+
+// ==========================================
+// Create Access & Refresh Tokens
+// ==========================================
 
 export const createToken = ({
   payload = {},
   accessOptions = {},
   refreshOptions = {},
-  role = ROLE.USER
+  role = ROLE.USER,
 }) => {
-  const secrets = getRoleSecret(role)
+  const secrets = getRoleSecret(role);
+
   const tokenPayload = {
     ...payload,
-    role
+    role,
   };
 
   const accessToken = jwt.sign(
-    tokenPayload,
+    {
+      ...tokenPayload,
+      jti: randomUUID(),
+    },
     secrets.access,
     {
       expiresIn: configService.ACCESS_EXPIRES_IN,
@@ -27,7 +38,10 @@ export const createToken = ({
   );
 
   const refreshToken = jwt.sign(
-    tokenPayload,
+    {
+      ...tokenPayload,
+      jti: randomUUID(),
+    },
     secrets.refresh,
     {
       expiresIn: configService.REFRESH_EXPIRES_IN,
@@ -43,19 +57,21 @@ export const createToken = ({
 };
 
 
+// ==========================================
+// Get Secrets Based On User Role
+// ==========================================
 
 const getRoleSecret = (role) => {
-
   const secrets = {
     [ROLE.ADMIN]: {
       access: configService.JWT_ACCESS_ADMIN_SECRET,
-      refresh: configService.JWT_REFRESH_ADMIN_SECRET
+      refresh: configService.JWT_REFRESH_ADMIN_SECRET,
     },
 
     [ROLE.USER]: {
       access: configService.JWT_ACCESS_USER_SECRET,
-      refresh: configService.JWT_REFRESH_USER_SECRET
-    }
+      refresh: configService.JWT_REFRESH_USER_SECRET,
+    },
   };
 
   const selectedSecret = secrets[role];
@@ -68,8 +84,11 @@ const getRoleSecret = (role) => {
 };
 
 
+// ==========================================
+// Get Secret Based On Token Type
+// ==========================================
 
-const getSecret = ({tokenType, role}) => {
+const getSecret = ({ tokenType, role }) => {
   const secrets = getRoleSecret(role);
 
   switch (tokenType) {
@@ -85,26 +104,33 @@ const getSecret = ({tokenType, role}) => {
 };
 
 
-
-
+// ==========================================
+// Verify JWT
+// ==========================================
 
 export const verifyToken = ({
   token,
-  tokenType = TokenType.accessTokenType
+  tokenType = TokenType.accessTokenType,
 }) => {
   const decoded = jwt.decode(token);
 
   if (
     !decoded ||
     typeof decoded !== "object" ||
+    Array.isArray(decoded) ||
     !Object.values(ROLE).includes(decoded.role)
   ) {
     throw new Error("Invalid token payload");
   }
 
-  const secret = getSecret({tokenType : tokenType, role : decoded.aud[0]});
-
-  return jwt.verify(token, secret, {
-    algorithms: [configService.TOKEN_ALGORITHM]
+  const secret = getSecret({
+    tokenType,
+    role: decoded.role,
   });
+
+  const verifiedPayload = jwt.verify(token, secret, {
+    algorithms: [configService.TOKEN_ALGORITHM],
+  });
+
+  return verifiedPayload;
 };

@@ -15,7 +15,8 @@
         "emailInvalid": "Invalid email address",
         "invalidGender": "Invalid gender",
         "passwordMismatch": "Passwords do not match",
-        "passwordContainsName": "Password must not contain your name"
+        "passwordContainsName": "Password must not contain your name",
+        "invalidLogoutType": "Invalid logout type"
     },
     "auth": {
         "signup": {
@@ -26,6 +27,9 @@
         },
         "rotateToken": {
             "success": "Token refreshed successfully"
+        },
+        "logout": {
+            "success": "Logged out successfully"
         }
     }
 }

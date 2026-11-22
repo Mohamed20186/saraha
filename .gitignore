@@ -1,3 +1,5 @@
 /.env.development
 /.env.production
 /node_modules
+/google.auth.json
+/ts.js

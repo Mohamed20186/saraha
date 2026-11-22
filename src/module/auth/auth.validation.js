@@ -1,12 +1,15 @@
 import { z } from "zod";
 import { gender } from "../../common/enums/gender.enum.js";
 import gf from "../../common/utils/generalFildes.js";
+import { logoutEnum } from "../../common/enums/logout.enum.js";
 
 const genderValues = Object.values(gender).filter(
   (value) => typeof value === "number"
 );
 
-// Login Body Schema
+const logoutValues = Object.values(logoutEnum).filter(
+  (value) => typeof value === "number"
+);
 export const loginBodySchema = (t) => {
   const fields = gf(t);
 
@@ -16,7 +19,6 @@ export const loginBodySchema = (t) => {
   });
 };
 
-// Signup Body Schema
 export const signupBodySchema = (t) => {
   const fields = gf(t);
 
@@ -64,7 +66,17 @@ export const signupBodySchema = (t) => {
     });
 };
 
-// Complete Schemas
+export const logoutBodySchema = (t) => {
+  return z.strictObject({
+    logoutType: z
+      .number()
+      .int()
+      .refine((value) => logoutValues.includes(value), {
+        error: t("validation.invalidLogoutType"),
+      }),
+  });
+};
+
 export const loginSchema = (t) =>
   z.object({
     body: loginBodySchema(t),
@@ -73,4 +85,9 @@ export const loginSchema = (t) =>
 export const signupSchema = (t) =>
   z.object({
     body: signupBodySchema(t),
+  });
+
+export const logoutSchema = (t) =>
+  z.object({
+    body: logoutBodySchema(t),
   });

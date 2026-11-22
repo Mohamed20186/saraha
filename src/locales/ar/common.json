@@ -15,7 +15,8 @@
         "emailInvalid": "البريد الإلكتروني غير صالح",
         "invalidGender": "النوع غير صحيح",
         "passwordMismatch": "كلمتا المرور غير متطابقتين",
-        "passwordContainsName": "يجب ألا تحتوي كلمة المرور على اسمك"
+        "passwordContainsName": "يجب ألا تحتوي كلمة المرور على اسمك",
+        "invalidLogoutType": "نوع تسجيل الخروج غير صحيح"
     },
     "auth": {
         "signup": {
@@ -26,6 +27,9 @@
         },
         "rotateToken": {
             "success": "تم تجديد التوكن بنجاح"
+        },
+        "logout": {
+            "success": "تم تسجيل الخروج بنجاح"
         }
     }
 }

@@ -53,3 +53,14 @@ export const findUsersByName = async ({
         options,
     });
 };
+
+export const incrementTokenVersion = async ({ id }) => {
+  return User.updateOne(
+    { _id: id },
+    {
+      $inc: {
+        tokenVersion: 1,
+      },
+    },
+  );
+};

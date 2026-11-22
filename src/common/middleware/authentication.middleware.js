@@ -3,8 +3,9 @@ import { verifyToken, comparePassword } from "../security/index.js";
 import { AUTH_ENUM } from "../enums/auth.enum.js";
 import { hashEnum } from "../enums/hash.enum.js";
 import { userRepo } from "../../repo/user.repo.js";
+import { isTokenRevoked } from "../security/token-revocation.js";
 
-export const authenticate = ({ tokenType }) => {
+export const authenticate = ({ tokenType, allowedSchemes = Object.values(AUTH_ENUM) }) => {
   return async (req, res, next) => {
     try {
       const authorization = req.headers.authorization;
@@ -30,6 +31,13 @@ export const authenticate = ({ tokenType }) => {
         });
       }
 
+      if (!allowedSchemes.includes(scheme.toLowerCase())) {
+        return res.status(401).json({
+          success: false,
+          message: "Unsupported authorization scheme",
+        });
+      }
+
       let user;
 
       switch (scheme.toLowerCase()) {
@@ -39,10 +47,21 @@ export const authenticate = ({ tokenType }) => {
             tokenType,
           });
 
-          if (!decoded?.sub) {
+          if (!decoded?.sub || !decoded?.jti || !decoded?.exp) {
             return res.status(401).json({
               success: false,
-              message: "Invalid token",
+              message: "Invalid token payload",
+            });
+          }
+
+          const revoked = await isTokenRevoked({
+            jti: decoded.jti,
+          });
+
+          if (revoked) {
+            return res.status(401).json({
+              success: false,
+              message: "Token has been revoked",
             });
           }
 
@@ -55,6 +74,16 @@ export const authenticate = ({ tokenType }) => {
             return res.status(401).json({
               success: false,
               message: "User not found",
+            });
+          }
+
+          if (
+            Number(user.tokenVersion ?? 0) !==
+            Number(decoded.tokenVersion ?? 0)
+          ) {
+            return res.status(401).json({
+              success: false,
+              message: "Session expired. Please login again.",
             });
           }
 

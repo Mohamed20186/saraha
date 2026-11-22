@@ -47,7 +47,11 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true
-    }
+    },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
@@ -75,4 +79,3 @@ userSchema.virtual("userName").set(function (value) {
 
 
 export const User = mongoose.model("User", userSchema);
-

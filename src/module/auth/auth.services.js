@@ -1,11 +1,12 @@
 import { exceptions } from "../../common/exceptions/index.js";
 import { hashEnum, security } from "../../common/index.js";
 import { encryptData } from "../../common/security/encryption.js";
-import configService from "../../config/config.service.js";
 import { createToken, verifyToken } from "../../common/security/index.js";
 import { TokenType } from "../../common/enums/tokenType.enum.js";
 import { userRepo } from "../../repo/user.repo.js";
-
+import { revokeToken } from "../../common/security/token-revocation.js";
+import { logoutEnum } from "../../common/enums/logout.enum.js";
+import { incrementTokenVersion } from "../../repo/user.repo.js";
 
 export const signup = async (data) => {
   let userExists = await userRepo.findOne({ filter: { email: data.email }, projection: { email: 1 } })
@@ -33,43 +34,45 @@ export const login = async (data) => {
   if (!plainTextPass) {
     throw exceptions.notFound("Invalid email or password");
   }
-  const tokens = createToken({
+  return createToken({
+    payload: {
+      tokenVersion: userExists.tokenVersion ?? 0,
+    },
     role: userExists.role,
     accessOptions: {
       subject: userExists.id,
       issuer: `${userExists.role}`,
-      audience: [userExists.role]
+      audience: [userExists.role],
     },
     refreshOptions: {
       subject: userExists.id,
       issuer: `${userExists.role}`,
-      audience: [userExists.role]
+      audience: [userExists.role],
     },
-
-  })
-  return tokens;
+  });
 };
 
-
-
-export const rotateToken = (refreshToken) => {
+export const rotateToken = async (refreshToken) => {
   const decoded = verifyToken({
     token: refreshToken,
     tokenType: TokenType.refreshTokenType,
   });
 
-  if (typeof decoded === "string" || !decoded.sub) {
+  if (
+    typeof decoded === "string" ||
+    !decoded.sub ||
+    !decoded.jti ||
+    !decoded.exp
+  ) {
     throw new Error("Invalid refresh token payload");
   }
-  let accessIAT = decoded.iat * 1000
-  let accessExpIn = configService.ACCESS_EXPIRES_IN * 1000
-  let accessExpAt = accessIAT + accessExpIn
-  let currTime = Date.now()
-  if (currTime < accessExpAt) {
-    throw exceptions.conflict("access token still valid")
-  }
 
-  return createToken({
+
+  const tokens = createToken({
+    payload: {
+      tokenVersion: decoded.tokenVersion ?? 0,
+    },
+    role: decoded.role,
     accessOptions: {
       subject: decoded.sub,
     },
@@ -77,4 +80,34 @@ export const rotateToken = (refreshToken) => {
       subject: decoded.sub,
     },
   });
+
+  const revoked = await revokeToken({
+    jti: decoded.jti,
+    exp: decoded.exp,
+  });
+
+  if (!revoked) {
+    throw exceptions.unauthorized("Refresh token has already been used or expired");
+  }
+
+  return tokens;
+};
+
+export const logout = async ({ userId, logoutType }) => {
+  switch (logoutType) {
+    case logoutEnum.ALL: {
+      await incrementTokenVersion({
+        id: userId,
+      });
+
+      return true;
+    }
+
+    case logoutEnum.DEVICE: {
+      throw exceptions.badRequest("Device logout is not supported yet; use logoutType ALL");
+    }
+
+    default:
+      throw exceptions.badRequest("Invalid logout type");
+  }
 };

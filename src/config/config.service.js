@@ -22,6 +22,9 @@ export default {
     TOKEN_ALGORITHM: process.env.TOKEN_ALGORITHM,
     ACCESS_EXPIRES_IN: Number(process.env.ACCESS_EXPIRES_IN),
     REFRESH_EXPIRES_IN: Number(process.env.REFRESH_EXPIRES_IN),
-    REDIS_URI : process.env.REDIS_URI
+    REDIS_URI : process.env.REDIS_URI,
+    EMAIL_PASS : process.env.EMAIL_PASS,
+    EMAIL_USER : process.env.EMAIL_USER
+
 }
 

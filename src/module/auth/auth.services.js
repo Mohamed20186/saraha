@@ -7,16 +7,49 @@ import { userRepo } from "../../repo/user.repo.js";
 import { revokeToken } from "../../common/security/token-revocation.js";
 import { logoutEnum } from "../../common/enums/logout.enum.js";
 import { incrementTokenVersion } from "../../repo/user.repo.js";
+import { sendMail } from "../../common/service/mail.service.js";
+import { setCache } from "../../common/service/cashe.service.js";
+import { randomInt } from "node:crypto";
+import { buildEmailHtml } from "../../common/utils/mail.templates.js";
 
 export const signup = async (data) => {
-  let userExists = await userRepo.findOne({ filter: { email: data.email }, projection: { email: 1 } })
+  const userExists = await userRepo.findOne({
+    filter: { email: data.email },
+    projection: { email: 1 },
+  });
+
   if (userExists) {
     throw exceptions.conflict("user already exists");
   }
-  data.password = await security.hashPassword({ plainText: data.password, lib: hashEnum.argon });
-  data.phone = await encryptData({ plainText: data.phone })
-  return await userRepo.create({data : data})
-  
+
+  data.password = await security.hashPassword({
+    plainText: data.password,
+    lib: hashEnum.argon,
+  });
+  data.phone = await encryptData({ plainText: data.phone });
+
+  const user = await userRepo.create({ data });
+
+  const otp = randomInt(100000, 1000000).toString();
+  await setCache({ key: `otp:${data.email}`, value: otp, ttl: 600 });
+
+  await sendMail({
+    to: data.email,
+    subject: "Your verification code",
+    text: `Verification code: ${otp}. Valid for 10 minutes.`,
+    html: buildEmailHtml({
+      appName: "Saraha",
+      title: "Email confirmation",
+      greeting: `Hi ${data.firstName},`,
+      message:
+        "Use the following code to verify your account. The code is valid for 10 minutes.",
+      otp,
+      note: "If you didn't request the code, ignore this message.",
+      dir: "ltr",
+    }),
+  });
+
+  return user;
 };
 
 

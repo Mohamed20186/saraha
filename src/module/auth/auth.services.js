@@ -28,7 +28,6 @@ const sendVerificationOtp = async ({ email, firstName }) => {
   const otp = randomInt(100000, 1000000).toString();
   const otpHash = hashOtp(otp);
 
-  // Atomic: only one concurrent send wins the cooldown.
   const stored = await storeOtp({
     email,
     otpHash,
@@ -59,7 +58,6 @@ const sendVerificationOtp = async ({ email, firstName }) => {
       }),
     });
   } catch (error) {
-    // Only releases the keys if they still belong to this send.
     await releaseOtp({ email, otpHash });
     throw error;
   }
@@ -88,8 +86,7 @@ export const signup = async (data) => {
     data.phone = encryptData({ plainText: data.phone });
   }
 
-  // Send the verification email before saving the user so a mail failure
-  // does not leave an unverifiable account behind.
+  
   const { otpHash } = await sendVerificationOtp({
     email: data.email,
     firstName: data.firstName,
@@ -99,10 +96,8 @@ export const signup = async (data) => {
     const user = await userRepo.create({ data });
     return user;
   } catch (error) {
-    // Only removes this send's code; a newer send for the same email survives.
     await releaseOtp({ email: data.email, otpHash });
-    // Two concurrent signups for the same email can both pass the existence
-    // check; the loser's insert hits the unique index.
+    
     if (error?.code === 11000) {
       throw exceptions.conflict("user already exists");
     }

@@ -25,3 +25,6 @@ export const conflict = (message = "Resource Already Exists") =>
 
 export const unprocessableEntity = (message = "Unprocessable Entity") =>
     createError(message, 422, "UNPROCESSABLE_ENTITY");
+
+export const tooManyRequests = (message = "Too Many Requests") =>
+    createError(message, 429, "TOO_MANY_REQUESTS");

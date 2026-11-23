@@ -155,6 +155,13 @@ export const authenticate = ({ tokenType, allowedSchemes = Object.values(AUTH_EN
           });
       }
 
+      if (!user.isVerified) {
+        return res.status(403).json({
+          success: false,
+          message: "Email is not verified. Please verify your account.",
+        });
+      }
+
       req.user = user;
 
       return next();

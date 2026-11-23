@@ -8,11 +8,68 @@ import { revokeToken } from "../../common/security/token-revocation.js";
 import { logoutEnum } from "../../common/enums/logout.enum.js";
 import { incrementTokenVersion } from "../../repo/user.repo.js";
 import { sendMail } from "../../common/service/mail.service.js";
-import { setCache } from "../../common/service/cashe.service.js";
+import {
+  hashOtp,
+  storeOtp,
+  verifyOtp,
+  releaseOtp,
+  OTP_VERIFY_RESULT,
+} from "../../common/service/otp.service.js";
 import { randomInt } from "node:crypto";
 import { buildEmailHtml } from "../../common/utils/mail.templates.js";
 
+const OTP_TTL_SECONDS = 600;
+const OTP_RESEND_COOLDOWN_SECONDS = 60;
+const OTP_MAX_ATTEMPTS = 5;
+
+const normalizeEmail = (email) => email.trim().toLowerCase();
+
+const sendVerificationOtp = async ({ email, firstName }) => {
+  const otp = randomInt(100000, 1000000).toString();
+  const otpHash = hashOtp(otp);
+
+  // Atomic: only one concurrent send wins the cooldown.
+  const stored = await storeOtp({
+    email,
+    otpHash,
+    ttl: OTP_TTL_SECONDS,
+    cooldownTtl: OTP_RESEND_COOLDOWN_SECONDS,
+  });
+
+  if (!stored) {
+    throw exceptions.tooManyRequests(
+      "A verification code was sent recently. Please wait a minute before requesting a new one.",
+    );
+  }
+
+  try {
+    await sendMail({
+      to: email,
+      subject: "Your verification code",
+      text: `Verification code: ${otp}. Valid for 10 minutes.`,
+      html: buildEmailHtml({
+        appName: "Saraha",
+        title: "Email confirmation",
+        greeting: `Hi ${firstName},`,
+        message:
+          "Use the following code to verify your account. The code is valid for 10 minutes.",
+        otp,
+        note: "If you didn't request the code, ignore this message.",
+        dir: "ltr",
+      }),
+    });
+  } catch (error) {
+    // Only releases the keys if they still belong to this send.
+    await releaseOtp({ email, otpHash });
+    throw error;
+  }
+
+  return { otpHash };
+};
+
 export const signup = async (data) => {
+  data.email = normalizeEmail(data.email);
+
   const userExists = await userRepo.findOne({
     filter: { email: data.email },
     projection: { email: 1 },
@@ -26,36 +83,90 @@ export const signup = async (data) => {
     plainText: data.password,
     lib: hashEnum.argon,
   });
-  data.phone = await encryptData({ plainText: data.phone });
 
-  const user = await userRepo.create({ data });
+  if (data.phone !== undefined) {
+    data.phone = encryptData({ plainText: data.phone });
+  }
 
-  const otp = randomInt(100000, 1000000).toString();
-  await setCache({ key: `otp:${data.email}`, value: otp, ttl: 600 });
-
-  await sendMail({
-    to: data.email,
-    subject: "Your verification code",
-    text: `Verification code: ${otp}. Valid for 10 minutes.`,
-    html: buildEmailHtml({
-      appName: "Saraha",
-      title: "Email confirmation",
-      greeting: `Hi ${data.firstName},`,
-      message:
-        "Use the following code to verify your account. The code is valid for 10 minutes.",
-      otp,
-      note: "If you didn't request the code, ignore this message.",
-      dir: "ltr",
-    }),
+  // Send the verification email before saving the user so a mail failure
+  // does not leave an unverifiable account behind.
+  const { otpHash } = await sendVerificationOtp({
+    email: data.email,
+    firstName: data.firstName,
   });
 
-  return user;
+  try {
+    const user = await userRepo.create({ data });
+    return user;
+  } catch (error) {
+    // Only removes this send's code; a newer send for the same email survives.
+    await releaseOtp({ email: data.email, otpHash });
+    // Two concurrent signups for the same email can both pass the existence
+    // check; the loser's insert hits the unique index.
+    if (error?.code === 11000) {
+      throw exceptions.conflict("user already exists");
+    }
+    throw error;
+  }
+};
+
+export const confirmEmail = async ({ email, otp }) => {
+  const normalizedEmail = normalizeEmail(email);
+
+  const user = await userRepo.findOne({ filter: { email: normalizedEmail } });
+
+  if (!user) {
+    throw exceptions.badRequest("Invalid or expired OTP");
+  }
+
+  if (user.isVerified) {
+    throw exceptions.badRequest("Email is already verified");
+  }
+
+  const result = await verifyOtp({
+    email: normalizedEmail,
+    otp,
+    maxAttempts: OTP_MAX_ATTEMPTS,
+  });
+
+  if (result === OTP_VERIFY_RESULT.LOCKED) {
+    throw exceptions.tooManyRequests(
+      "Too many invalid attempts. Request a new verification code.",
+    );
+  }
+
+  if (result !== OTP_VERIFY_RESULT.CONSUMED) {
+    throw exceptions.badRequest("Invalid or expired OTP");
+  }
+
+  user.isVerified = true;
+  await user.save();
+
+  return true;
+};
+
+export const resendOtp = async ({ email }) => {
+  const normalizedEmail = normalizeEmail(email);
+
+  const user = await userRepo.findOne({ filter: { email: normalizedEmail } });
+
+  if (!user) {
+    throw exceptions.notFound("No account found with this email");
+  }
+
+  if (user.isVerified) {
+    throw exceptions.badRequest("Email is already verified");
+  }
+
+  await sendVerificationOtp({ email: normalizedEmail, firstName: user.firstName });
+
+  return true;
 };
 
 
 
 export const login = async (data) => {
-    let userExists = await userRepo.findOne({filter: {email : data.email}})
+    let userExists = await userRepo.findOne({filter: {email : normalizeEmail(data.email)}})
   if (!userExists) {
     throw exceptions.notFound("Invalid email or password");
   }
@@ -66,6 +177,11 @@ export const login = async (data) => {
   });
   if (!plainTextPass) {
     throw exceptions.notFound("Invalid email or password");
+  }
+  if (!userExists.isVerified) {
+    throw exceptions.forbidden(
+      "Email is not verified. Please verify your account to login.",
+    );
   }
   return createToken({
     payload: {

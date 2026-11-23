@@ -7,6 +7,8 @@ import {
   loginSchema,
   signupSchema,
   logoutSchema,
+  confirmEmailSchema,
+  resendOtpSchema,
 } from "./auth.validation.js";
 import { validation } from "../../common/middleware/index.js";
 import { AUTH_ENUM } from "../../common/index.js";
@@ -42,6 +44,42 @@ authController.post("/login",validation(loginSchema), async (req, res, next) => 
   }
 });
 
+
+authController.post(
+  "/confirm-email",
+  validation(confirmEmailSchema),
+  async (req, res, next) => {
+    try {
+      await as.confirmEmail(req.validate.body);
+      response({
+        res,
+        data: null,
+        statusCode: 200,
+        message: req.t("auth.confirmEmail.success"),
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+authController.post(
+  "/resend-otp",
+  validation(resendOtpSchema),
+  async (req, res, next) => {
+    try {
+      await as.resendOtp(req.validate.body);
+      response({
+        res,
+        data: null,
+        statusCode: 200,
+        message: req.t("auth.resendOtp.success"),
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 authController.post(
   "/rotate-token",

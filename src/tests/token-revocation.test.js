@@ -25,7 +25,7 @@ const userId = '507f1f77bcf86cd799439011';
 let user;
 beforeEach(() => {
   revoked.clear();
-  user = { id: userId, _id: userId, role: ROLE.ADMIN, tokenVersion: 0 };
+  user = { id: userId, _id: userId, role: ROLE.ADMIN, tokenVersion: 0, isVerified: true };
   userRepo.findById = async () => user;
   userRepo.findOne = async () => { throw new Error('Basic must not query users here'); };
   client.exists = async key => revoked.has(key) ? 1 : 0;

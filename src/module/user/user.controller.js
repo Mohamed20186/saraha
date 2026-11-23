@@ -6,7 +6,7 @@ import { TokenType } from "../../common/enums/tokenType.enum.js";
 import { authorize } from "../../common/middleware/authorization.middleware.js";
 import { ROLE } from "../../common/enums/role.enum.js";
 import { validation } from "../../common/middleware/validation.middleware.js";
-import { userProfileSchema } from "./user.validation.js";
+import { userProfileSchema, updateProfileSchema } from "./user.validation.js";
 
 export const userController = Router();
 
@@ -45,9 +45,9 @@ userController.get(
   },
 );
 
-userController.patch("/profile", authenticate({tokenType : TokenType.accessTokenType}), async (req, res, next) => {
+userController.patch("/profile", authenticate({tokenType : TokenType.accessTokenType}), validation(updateProfileSchema), async (req, res, next) => {
   try {
-    const user = await us.updateUser(req.auth.sub, req.body);
+    const user = await us.updateUser(req.auth.sub, req.validate.body);
 
     response({
       res,
@@ -62,7 +62,7 @@ userController.patch("/profile", authenticate({tokenType : TokenType.accessToken
 
 userController.get("/user-profile/:userId", validation(userProfileSchema) , async (req, res, next) => {
   try {
-    const user = await us.getUserById(req.validate.params.userId);
+    const user = await us.getPublicProfile(req.validate.params.userId);
     response({
       res,
       data: user,

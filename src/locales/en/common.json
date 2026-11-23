@@ -16,7 +16,9 @@
         "invalidGender": "Invalid gender",
         "passwordMismatch": "Passwords do not match",
         "passwordContainsName": "Password must not contain your name",
-        "invalidLogoutType": "Invalid logout type"
+        "invalidLogoutType": "Invalid logout type",
+        "invalidOtp": "Invalid verification code",
+        "emptyUpdate": "Provide at least one field to update"
     },
     "auth": {
         "signup": {
@@ -30,6 +32,12 @@
         },
         "logout": {
             "success": "Logged out successfully"
+        },
+        "confirmEmail": {
+            "success": "Email verified successfully"
+        },
+        "resendOtp": {
+            "success": "Verification code sent successfully"
         }
     }
 }

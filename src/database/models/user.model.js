@@ -52,6 +52,10 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
@@ -60,6 +64,10 @@ const userSchema = new mongoose.Schema(
 
     toJSON: {
       virtuals: true,
+      transform: (doc, ret) => {
+        delete ret.password;
+        return ret;
+      },
     },
 
     toObject: {
@@ -69,9 +77,9 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.virtual("userName").set(function (value) {
-  let [firstName, LastNamed] = value.split(" ")
-  this.firstName = firstName,
-    this.lastName = this.lastName
+  let [firstName, lastName] = value.split(" ")
+  this.firstName = firstName
+  this.lastName = lastName
 }).get(function () {
   return `${this.firstName} ${this.lastName} `
 })

@@ -77,6 +77,33 @@ export const logoutBodySchema = (t) => {
   });
 };
 
+export const confirmEmailBodySchema = (t) => {
+  const fields = gf(t);
+
+  return z.strictObject({
+    email: fields.email,
+    otp: z
+      .string({
+        error: (issue) =>
+          issue.input === undefined
+            ? t("validation.required")
+            : t("validation.string"),
+      })
+      .trim()
+      .regex(/^\d{6}$/, {
+        error: t("validation.invalidOtp"),
+      }),
+  });
+};
+
+export const resendOtpBodySchema = (t) => {
+  const fields = gf(t);
+
+  return z.strictObject({
+    email: fields.email,
+  });
+};
+
 export const loginSchema = (t) =>
   z.object({
     body: loginBodySchema(t),
@@ -90,4 +117,14 @@ export const signupSchema = (t) =>
 export const logoutSchema = (t) =>
   z.object({
     body: logoutBodySchema(t),
+  });
+
+export const confirmEmailSchema = (t) =>
+  z.object({
+    body: confirmEmailBodySchema(t),
+  });
+
+export const resendOtpSchema = (t) =>
+  z.object({
+    body: resendOtpBodySchema(t),
   });

@@ -16,7 +16,9 @@
         "invalidGender": "النوع غير صحيح",
         "passwordMismatch": "كلمتا المرور غير متطابقتين",
         "passwordContainsName": "يجب ألا تحتوي كلمة المرور على اسمك",
-        "invalidLogoutType": "نوع تسجيل الخروج غير صحيح"
+        "invalidLogoutType": "نوع تسجيل الخروج غير صحيح",
+        "invalidOtp": "رمز التحقق غير صحيح",
+        "emptyUpdate": "أدخل حقلًا واحدًا على الأقل لتحديثه"
     },
     "auth": {
         "signup": {
@@ -30,6 +32,12 @@
         },
         "logout": {
             "success": "تم تسجيل الخروج بنجاح"
+        },
+        "confirmEmail": {
+            "success": "تم تأكيد البريد الإلكتروني بنجاح"
+        },
+        "resendOtp": {
+            "success": "تم إرسال رمز التحقق بنجاح"
         }
     }
 }

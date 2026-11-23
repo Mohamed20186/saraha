@@ -13,7 +13,15 @@ import { buildEmailHtml } from "./common/utils/mail.templates.js";
 const startServer = async () => {
   try {
     await dbConnection();
-    await verifyMailConnection();
+
+    try {
+      await verifyMailConnection();
+    } catch (mailError) {
+      console.warn(
+        "Mail server is unreachable at startup; continuing anyway. Verification emails may fail until SMTP is reachable:",
+        mailError.message,
+      );
+    }
     
     await setCache({ key: "age", value: "28", ttl: 10 });
     app.listen(configService.port, () => {

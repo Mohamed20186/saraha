@@ -72,6 +72,7 @@ mock.module("../repo/user.repo.js", {
       },
     },
     incrementTokenVersion: async () => ({}),
+    resetUserPassword: async () => true,
     findUserByEmail: async () => null,
     findUsersByRole: async () => [],
     findUsersByName: async () => [],

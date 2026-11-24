@@ -9,6 +9,8 @@ import {
   logoutSchema,
   confirmEmailSchema,
   resendOtpSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from "./auth.validation.js";
 import { validation } from "../../common/middleware/index.js";
 import { AUTH_ENUM } from "../../common/index.js";
@@ -118,6 +120,42 @@ authController.post(
         data: null,
         statusCode: 200,
         message: req.t("auth.logout.success"),
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+authController.post(
+  "/forgot-password",
+  validation(forgotPasswordSchema),
+  async (req, res, next) => {
+    try {
+      await as.forgotPassword(req.validate.body);
+      response({
+        res,
+        data: null,
+        statusCode: 200,
+        message: req.t("auth.forgotPassword.success"),
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+authController.post(
+  "/reset-password",
+  validation(resetPasswordSchema),
+  async (req, res, next) => {
+    try {
+      await as.resetPassword(req.validate.body);
+      response({
+        res,
+        data: null,
+        statusCode: 200,
+        message: req.t("auth.resetPassword.success"),
       });
     } catch (error) {
       next(error);

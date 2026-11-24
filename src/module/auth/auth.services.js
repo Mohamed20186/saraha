@@ -6,7 +6,7 @@ import { TokenType } from "../../common/enums/tokenType.enum.js";
 import { userRepo } from "../../repo/user.repo.js";
 import { revokeToken } from "../../common/security/token-revocation.js";
 import { logoutEnum } from "../../common/enums/logout.enum.js";
-import { incrementTokenVersion } from "../../repo/user.repo.js";
+import { incrementTokenVersion, resetUserPassword } from "../../repo/user.repo.js";
 import { sendMail } from "../../common/service/mail.service.js";
 import {
   hashOtp,
@@ -254,4 +254,123 @@ export const logout = async ({ userId, logoutType }) => {
     default:
       throw exceptions.badRequest("Invalid logout type");
   }
+};
+
+
+// ---------- Password reset ----------
+const RESET_PURPOSE = "reset";
+
+// Always resolves the same way whether or not the account exists, so the
+// endpoint cannot be used to find out which emails are registered.
+export const forgotPassword = async ({ email }) => {
+  const normalizedEmail = normalizeEmail(email);
+
+  const user = await userRepo.findOne({ filter: { email: normalizedEmail } });
+
+  // Unknown or unverified accounts get no code, but the response is identical.
+  if (!user || !user.isVerified) {
+    return true;
+  }
+
+  const otp = randomInt(100000, 1000000).toString();
+  const otpHash = hashOtp(otp);
+
+  const stored = await storeOtp({
+    email: normalizedEmail,
+    otpHash,
+    ttl: OTP_TTL_SECONDS,
+    cooldownTtl: OTP_RESEND_COOLDOWN_SECONDS,
+    purpose: RESET_PURPOSE,
+  });
+
+  // Cooldown held: a code was sent a moment ago. Same response again.
+  if (!stored) {
+    return true;
+  }
+
+  try {
+    await sendMail({
+      to: normalizedEmail,
+      subject: "Reset your password",
+      text: `Password reset code: ${otp}. Valid for 10 minutes.`,
+      html: buildEmailHtml({
+        appName: "Saraha",
+        title: "Password reset",
+        greeting: `Hi ${user.firstName},`,
+        message:
+          "Use the following code to reset your password. The code is valid for 10 minutes.",
+        otp,
+        note: "If you didn't request a password reset, ignore this message. Your password will not change.",
+        dir: "ltr",
+      }),
+    });
+  } catch (error) {
+    await releaseOtp({
+      email: normalizedEmail,
+      otpHash,
+      purpose: RESET_PURPOSE,
+    });
+    // Do not surface the failure: an error only for real accounts would let
+    // anyone tell which emails are registered. mail.service already logs it,
+    // and releasing the code lets the user simply ask again.
+    console.error("forgot-password: could not send reset email");
+  }
+
+  return true;
+};
+
+export const resetPassword = async ({ email, otp, password }) => {
+  const normalizedEmail = normalizeEmail(email);
+
+  const user = await userRepo.findOne({ filter: { email: normalizedEmail } });
+
+  if (!user || !user.isVerified) {
+    throw exceptions.badRequest("Invalid or expired OTP");
+  }
+
+  const result = await verifyOtp({
+    email: normalizedEmail,
+    otp,
+    maxAttempts: OTP_MAX_ATTEMPTS,
+    purpose: RESET_PURPOSE,
+  });
+
+  if (result === OTP_VERIFY_RESULT.LOCKED) {
+    throw exceptions.tooManyRequests(
+      "Too many invalid attempts. Request a new reset code.",
+    );
+  }
+
+  if (result !== OTP_VERIFY_RESULT.CONSUMED) {
+    throw exceptions.badRequest("Invalid or expired OTP");
+  }
+
+  const sameAsOld = await security.comparePassword({
+    plainText: password,
+    hashedPassword: user.password,
+    lib: hashEnum.argon,
+  });
+  if (sameAsOld) {
+    throw exceptions.badRequest(
+      "New password must be different from the current password",
+    );
+  }
+
+  const newPasswordHash = await security.hashPassword({
+    plainText: password,
+    lib: hashEnum.argon,
+  });
+
+  // Atomic: only applies if the password is still the one checked above,
+  // and bumps tokenVersion (signs out all sessions) in the same write.
+  const changed = await resetUserPassword({
+    id: user._id,
+    oldPasswordHash: user.password,
+    newPasswordHash,
+  });
+  if (!changed) {
+    throw exceptions.conflict("Password was changed meanwhile. Request a new reset code.");
+  }
+
+  return true;
 };

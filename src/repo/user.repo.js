@@ -64,3 +64,15 @@ export const incrementTokenVersion = async ({ id }) => {
     },
   );
 };
+
+// Atomic password change for the reset flow. Matches only while the stored
+// hash is still the one the caller checked, so two concurrent writers cannot
+// overwrite each other, and bumps tokenVersion with $inc (no lost update
+// against a concurrent logout-all). Returns true when a document changed.
+export const resetUserPassword = async ({ id, oldPasswordHash, newPasswordHash }) => {
+  const result = await User.updateOne(
+    { _id: id, password: oldPasswordHash },
+    { $set: { password: newPasswordHash }, $inc: { tokenVersion: 1 } },
+  );
+  return result.modifiedCount === 1;
+};

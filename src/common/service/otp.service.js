@@ -4,9 +4,15 @@ import { client } from "../../database/connections/redis.connection.js";
 export const hashOtp = (otp) =>
   createHash("sha256").update(String(otp)).digest("hex");
 
-export const otpCacheKey = (email) => `otp:${email}`;
-export const otpAttemptsCacheKey = (email) => `otp_attempts:${email}`;
-export const otpCooldownCacheKey = (email) => `otp_cooldown:${email}`;
+// purpose "" keeps the original email-verification keys; other purposes
+// (e.g. "reset") get their own keys so codes never mix.
+const suffix = (purpose) => (purpose ? `:${purpose}` : "");
+export const otpCacheKey = (email, purpose = "") =>
+  `otp${suffix(purpose)}:${email}`;
+export const otpAttemptsCacheKey = (email, purpose = "") =>
+  `otp_attempts${suffix(purpose)}:${email}`;
+export const otpCooldownCacheKey = (email, purpose = "") =>
+  `otp_cooldown${suffix(purpose)}:${email}`;
 
 // Store a freshly generated OTP.
 // Atomically acquires the resend cooldown (SET NX) before writing the code,
@@ -24,12 +30,12 @@ redis.call('DEL', KEYS[2])
 return 1
 `;
 
-export const storeOtp = async ({ email, otpHash, ttl, cooldownTtl }) => {
+export const storeOtp = async ({ email, otpHash, ttl, cooldownTtl, purpose = "" }) => {
   const result = await client.eval(STORE_SCRIPT, {
     keys: [
-      otpCacheKey(email),
-      otpAttemptsCacheKey(email),
-      otpCooldownCacheKey(email),
+      otpCacheKey(email, purpose),
+      otpAttemptsCacheKey(email, purpose),
+      otpCooldownCacheKey(email, purpose),
     ],
     arguments: [otpHash, String(ttl), String(cooldownTtl)],
   });
@@ -73,9 +79,9 @@ end
 return 0
 `;
 
-export const verifyOtp = async ({ email, otp, maxAttempts }) => {
+export const verifyOtp = async ({ email, otp, maxAttempts, purpose = "" }) => {
   return await client.eval(VERIFY_SCRIPT, {
-    keys: [otpCacheKey(email), otpAttemptsCacheKey(email)],
+    keys: [otpCacheKey(email, purpose), otpAttemptsCacheKey(email, purpose)],
     arguments: [hashOtp(otp), String(maxAttempts)],
   });
 };
@@ -96,9 +102,9 @@ end
 return released
 `;
 
-export const releaseOtp = async ({ email, otpHash }) => {
+export const releaseOtp = async ({ email, otpHash, purpose = "" }) => {
   return await client.eval(RELEASE_SCRIPT, {
-    keys: [otpCacheKey(email), otpCooldownCacheKey(email)],
+    keys: [otpCacheKey(email, purpose), otpCooldownCacheKey(email, purpose)],
     arguments: [otpHash],
   });
 };

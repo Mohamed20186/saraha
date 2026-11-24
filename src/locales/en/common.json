@@ -38,6 +38,12 @@
         },
         "resendOtp": {
             "success": "Verification code sent successfully"
+        },
+        "forgotPassword": {
+            "success": "If the email is registered, a reset code has been sent"
+        },
+        "resetPassword": {
+            "success": "Password reset successfully. Please log in again"
         }
     }
 }

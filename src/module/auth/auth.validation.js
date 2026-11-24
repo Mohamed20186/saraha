@@ -128,3 +128,32 @@ export const resendOtpSchema = (t) =>
   z.object({
     body: resendOtpBodySchema(t),
   });
+
+export const forgotPasswordSchema = (t) =>
+  z.object({
+    body: resendOtpBodySchema(t),
+  });
+
+export const resetPasswordBodySchema = (t) => {
+  const fields = gf(t);
+
+  return confirmEmailBodySchema(t)
+    .safeExtend({
+      password: fields.strongPassword,
+      confirmPassword: fields.password,
+    })
+    .superRefine((data, ctx) => {
+      if (data.password !== data.confirmPassword) {
+        ctx.addIssue({
+          code: "custom",
+          message: t("validation.passwordMismatch"),
+          path: ["confirmPassword"],
+        });
+      }
+    });
+};
+
+export const resetPasswordSchema = (t) =>
+  z.object({
+    body: resetPasswordBodySchema(t),
+  });

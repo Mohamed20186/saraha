@@ -94,6 +94,8 @@ All paths below are relative to the server address. Send request bodies as JSON 
 | `POST` | `/auth/signup` | None | Create an unverified account and send a code |
 | `POST` | `/auth/confirm-email` | None | Verify the account with its code |
 | `POST` | `/auth/resend-otp` | None | Send a new code for an unverified account |
+| `POST` | `/auth/forgot-password` | None | Email a 6-digit reset code (same response whether or not the email exists) |
+| `POST` | `/auth/reset-password` | None | Set a new password with `email`, `otp`, `password`, `confirmPassword`; signs out all sessions |
 | `POST` | `/auth/login` | None | Get access and refresh tokens |
 | `POST` | `/auth/rotate-token` | Refresh token | Replace a refresh token; the old one is revoked |
 | `POST` | `/auth/logout` | Refresh token, Bearer only | Log out of all sessions |

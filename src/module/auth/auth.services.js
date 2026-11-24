@@ -260,8 +260,7 @@ export const logout = async ({ userId, logoutType }) => {
 // ---------- Password reset ----------
 const RESET_PURPOSE = "reset";
 
-// Always resolves the same way whether or not the account exists, so the
-// endpoint cannot be used to find out which emails are registered.
+
 export const forgotPassword = async ({ email }) => {
   const normalizedEmail = normalizeEmail(email);
 
@@ -283,7 +282,6 @@ export const forgotPassword = async ({ email }) => {
     purpose: RESET_PURPOSE,
   });
 
-  // Cooldown held: a code was sent a moment ago. Same response again.
   if (!stored) {
     return true;
   }
@@ -310,9 +308,7 @@ export const forgotPassword = async ({ email }) => {
       otpHash,
       purpose: RESET_PURPOSE,
     });
-    // Do not surface the failure: an error only for real accounts would let
-    // anyone tell which emails are registered. mail.service already logs it,
-    // and releasing the code lets the user simply ask again.
+   
     console.error("forgot-password: could not send reset email");
   }
 
@@ -361,8 +357,7 @@ export const resetPassword = async ({ email, otp, password }) => {
     lib: hashEnum.argon,
   });
 
-  // Atomic: only applies if the password is still the one checked above,
-  // and bumps tokenVersion (signs out all sessions) in the same write.
+  
   const changed = await resetUserPassword({
     id: user._id,
     oldPasswordHash: user.password,

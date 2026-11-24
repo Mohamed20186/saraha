@@ -92,6 +92,7 @@ if (!hasRedisBinary) {
         create: async ({ data }) => createImpl({ data }),
       },
       incrementTokenVersion: async () => ({}),
+    resetUserPassword: async () => true,
       findUserByEmail: async () => null,
       findUsersByRole: async () => [],
       findUsersByName: async () => [],

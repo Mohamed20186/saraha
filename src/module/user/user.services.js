@@ -37,7 +37,7 @@ export const getPublicProfile = async (userId) => {
 export const updateUser = async (userId, data) => {
   const user = await getUserById(userId);
 
-  const allowedFields = ["firstName", "lastName"];
+  const allowedFields = ["firstName", "lastName", "image"];
 
   for (const key of allowedFields) {
     if (data[key] !== undefined) {

@@ -7,23 +7,28 @@ import { authorize } from "../../common/middleware/authorization.middleware.js";
 import { ROLE } from "../../common/enums/role.enum.js";
 import { validation } from "../../common/middleware/validation.middleware.js";
 import { userProfileSchema, updateProfileSchema } from "./user.validation.js";
+import { fileTypes, multerMiddleware } from "../../common/middleware/multer.middleware.js";
 
 export const userController = Router();
 
-userController.get("/profile", authenticate({tokenType : TokenType.accessTokenType}), async (req, res, next) => {
-  try {
-    const user = await us.profile(req.auth.sub);
+userController.get(
+  "/profile",
+  authenticate({ tokenType: TokenType.accessTokenType }),
+  async (req, res, next) => {
+    try {
+      const user = await us.profile(req.auth.sub);
 
-    response({
-      res,
-      data: user,
-      statusCode: 200,
-      message: "Profile retrieved successfully",
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+      response({
+        res,
+        data: user,
+        statusCode: 200,
+        message: "Profile retrieved successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 userController.get(
   "/admin-profile",
@@ -45,31 +50,56 @@ userController.get(
   },
 );
 
-userController.patch("/profile", authenticate({tokenType : TokenType.accessTokenType}), validation(updateProfileSchema), async (req, res, next) => {
-  try {
-    const user = await us.updateUser(req.auth.sub, req.validate.body);
+userController.patch(
+  "/profile",
+  authenticate({ tokenType: TokenType.accessTokenType }),
+  validation(updateProfileSchema),
+  async (req, res, next) => {
+    try {
+      const user = await us.updateUser(req.auth.sub, req.validate.body);
 
+      response({
+        res,
+        data: user,
+        statusCode: 200,
+        message: "Profile updated successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+userController.get(
+  "/user-profile/:userId",
+  validation(userProfileSchema),
+  async (req, res, next) => {
+    try {
+      const user = await us.getPublicProfile(req.validate.params.userId);
+      response({
+        res,
+        data: user,
+        statusCode: 200,
+        message: "Profile retrieved successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+userController.post(
+  "/image",
+  multerMiddleware({storageFolder:"users" , types : fileTypes.images}).array("image",5),
+  async (req, res, next) => {
+    console.log({
+      file: req.file,
+      files : req.files
+    });
     response({
       res,
-      data: user,
-      statusCode: 200,
-      message: "Profile updated successfully",
+      data: req.files,
+      message: "user updated in",
     });
-  } catch (error) {
-    next(error);
-  }
-});
-
-userController.get("/user-profile/:userId", validation(userProfileSchema) , async (req, res, next) => {
-  try {
-    const user = await us.getPublicProfile(req.validate.params.userId);
-    response({
-      res,
-      data: user,
-      statusCode: 200,
-      message: "Profile retrieved successfully",
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+  },
+);

@@ -90,17 +90,25 @@ userController.get(
 
 userController.post(
   "/image",
-  multerMiddleware({storageFolder:"users" , types : fileTypes.images}).single("image"),
-  processFile(fileTypes.images),
+  authenticate({ tokenType: TokenType.accessTokenType }),
+  multerMiddleware({ storageFolder: "users", types: fileTypes.images }).single(
+    "image",
+  ),
+  processFile({ types: fileTypes.images }),
   async (req, res, next) => {
-    console.log({
-      file: req.file,
-      files : req.files
-    });
-    response({
-      res,
-      data: req.file,
-      message: "user updated in",
-    });
+    try {
+      const image = `/uploads/users/${req.file.filename}`;
+
+      await us.updateUser(req.auth.sub, { image });
+
+      response({
+        res,
+        data: { image },
+        statusCode: 200,
+        message: "Profile image uploaded successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
   },
 );

@@ -48,6 +48,9 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true
     },
+    image: {
+      type: String,
+    },
     tokenVersion: {
       type: Number,
       default: 0,

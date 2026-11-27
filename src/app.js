@@ -9,6 +9,7 @@ const app = express();
 
 app.use(express.json());
 app.use(i18nMiddleware);
+app.use("/uploads", express.static("uploads"));
 
 app.use("/auth",authController)
 app.use("/user",userController)

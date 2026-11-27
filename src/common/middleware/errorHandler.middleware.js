@@ -1,4 +1,5 @@
 import { ZodError } from "zod";
+import multer from "multer";
 
 export const errorHandler = (err, req, res, next) => {
   if (res.headersSent) {
@@ -16,6 +17,15 @@ export const errorHandler = (err, req, res, next) => {
       success: false,
       message: "Validation failed",
       errors,
+    });
+  }
+
+  if (err instanceof multer.MulterError) {
+    const tooLarge = err.code === "LIMIT_FILE_SIZE";
+
+    return res.status(tooLarge ? 413 : 400).json({
+      success: false,
+      message: tooLarge ? "File is too large" : err.message,
     });
   }
 

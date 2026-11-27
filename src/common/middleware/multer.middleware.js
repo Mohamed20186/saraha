@@ -1,7 +1,15 @@
 
 import multer from "multer";
 import fs from "node:fs";
+import crypto from "node:crypto";
 import { fileTypeFromFile } from "file-type";
+import { exceptions } from "../exceptions/index.js";
+
+const extensions = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "application/pdf": ".pdf",
+};
 
 export const fileTypes = {
   images: ["image/jpeg", "image/png"],
@@ -25,13 +33,14 @@ export const multerMiddleware = ({
     },
 
     filename: function (req, file, cb) {
-      cb(null, `${Date.now()}-${file.originalname}`);
+      const ext = extensions[file.mimetype] || "";
+      cb(null, `${crypto.randomUUID()}${ext}`);
     },
   });
 
   const fileFilter = (req, file, cb) => {
     if (!types.includes(file.mimetype)) {
-      return cb(new Error("Not allowed file types"));
+      return cb(exceptions.badRequest("Not allowed file types"));
     }
 
     return cb(null, true);
@@ -59,7 +68,7 @@ export const processFile = ({
 
     try {
       if (files.length === 0) {
-        if (required) throw new Error("No file uploaded");
+        if (required) throw exceptions.badRequest("No file uploaded");
         return next();
       }
 
@@ -89,7 +98,7 @@ export const processFile = ({
 
 const checkFile = async (file, types) => {
   if (!file?.path) {
-    throw new Error("File path is missing");
+    throw exceptions.badRequest("File path is missing");
   }
 
   const result = await fileTypeFromFile(file.path);
@@ -99,7 +108,7 @@ const checkFile = async (file, types) => {
     !types.includes(result.mime) ||
     file.mimetype !== result.mime
   ) {
-    throw new Error("Invalid file content or type");
+    throw exceptions.badRequest("Invalid file content or type");
   }
 
   return result;

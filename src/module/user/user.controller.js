@@ -7,7 +7,7 @@ import { authorize } from "../../common/middleware/authorization.middleware.js";
 import { ROLE } from "../../common/enums/role.enum.js";
 import { validation } from "../../common/middleware/validation.middleware.js";
 import { userProfileSchema, updateProfileSchema } from "./user.validation.js";
-import { fileTypes, multerMiddleware } from "../../common/middleware/multer.middleware.js";
+import { fileTypes, multerMiddleware, processFile } from "../../common/middleware/multer.middleware.js";
 
 export const userController = Router();
 
@@ -90,7 +90,8 @@ userController.get(
 
 userController.post(
   "/image",
-  multerMiddleware({storageFolder:"users" , types : fileTypes.images}).array("image",5),
+  multerMiddleware({storageFolder:"users" , types : fileTypes.images}).single("image"),
+  processFile(fileTypes.images),
   async (req, res, next) => {
     console.log({
       file: req.file,
@@ -98,7 +99,7 @@ userController.post(
     });
     response({
       res,
-      data: req.files,
+      data: req.file,
       message: "user updated in",
     });
   },

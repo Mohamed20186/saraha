@@ -1,5 +1,6 @@
 import React from 'react'
 import { Loader2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export function Field({ label, error, ...props }) {
   return (
@@ -26,7 +27,7 @@ export function AuthCard({ title, subtitle, children, footer }) {
   )
 }
 export function ErrorBox({ children }) {
-  return children ? <div className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-600 dark:bg-rose-950/40">{children}</div> : null
+  return <AnimatePresence>{children ? <motion.div key={String(children)} initial={{ opacity: 0, height: 0, x: 0 }} animate={{ opacity: 1, height: 'auto', x: [0, -6, 6, -4, 4, 0] }} exit={{ opacity: 0, height: 0 }} transition={{ duration: .35 }} className="overflow-hidden rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-600 dark:bg-rose-950/40">{children}</motion.div> : null}</AnimatePresence>
 }
 export function timeAgo(ts, t) {
   const m = Math.floor((Date.now() - ts) / 60000)

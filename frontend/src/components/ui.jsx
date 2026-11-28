@@ -1,4 +1,5 @@
 import React from 'react'
+import { imageUrl } from '../api.js'
 import { Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -35,4 +36,12 @@ export function timeAgo(ts, t) {
   if (m < 60) return m + ' ' + t('min')
   const h = Math.floor(m / 60)
   return h < 24 ? h + ' ' + t('hr') : Math.floor(h / 24) + ' ' + t('day')
+}
+
+export function Avatar({ user, size = 80 }) {
+  const src = imageUrl(user?.image)
+  const initial = (user?.firstName || '?')[0]
+  return src
+    ? <img src={src} alt="" style={{ width: size, height: size }} className="rounded-full object-cover" />
+    : <div style={{ width: size, height: size, fontSize: size / 2.4 }} className="grid place-items-center rounded-full bg-gradient-to-br from-brand-600 to-fuchsia-600 font-extrabold text-white">{initial}</div>
 }

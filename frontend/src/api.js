@@ -73,6 +73,11 @@ export const api = {
     catch { /* ignore: local session is cleared anyway */ }
     tokens.clear()
   },
+  // Google sign-in: the backend must verify the Google id_token (see BACKEND_GOOGLE.md).
+  async googleLogin(idToken) {
+    tokens.set(await raw('/auth/social-login', { method: 'POST', body: { idToken } }))
+    return api.me()
+  },
   forgotPassword: ({ email }) => raw('/auth/forgot-password', { method: 'POST', body: { email } }),
   resetPassword: (b) => raw('/auth/reset-password', { method: 'POST', body: b }),
 

@@ -1,13 +1,29 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { useApp } from '../store.jsx'
 import { imageUrl } from '../api.js'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-export function Field({ label, error, ...props }) {
+export function Field({ label, error, type, ...props }) {
+  const [show, setShow] = useState(false)
+  const { t } = useApp()
+  const isPass = type === 'password'
   return (
     <label className="block">
       <span className="mb-1.5 block text-sm font-medium text-slate-600 dark:text-slate-300">{label}</span>
-      <input className={`input ${error ? '!border-rose-500' : ''}`} {...props} />
+      <span className="relative block">
+        <input className={`input ${isPass ? 'pe-11' : ''} ${error ? '!border-rose-500' : ''}`} type={isPass && show ? 'text' : type} {...props} />
+        {isPass && (
+          <button type="button" tabIndex={-1} onClick={() => setShow(!show)} aria-label={show ? t('hidePass') : t('showPass')} title={show ? t('hidePass') : t('showPass')}
+            className="absolute end-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-brand-600 active:scale-90 dark:hover:bg-slate-800">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span key={String(show)} initial={{ opacity: 0, scale: .6 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: .6 }} transition={{ duration: .12 }} className="inline-flex">
+                {show ? <EyeOff size={17} /> : <Eye size={17} />}
+              </motion.span>
+            </AnimatePresence>
+          </button>
+        )}
+      </span>
       {error && <span className="mt-1 block text-xs text-rose-500">{error}</span>}
     </label>
   )

@@ -22,12 +22,27 @@ export function Providers({ children }) {
     document.documentElement.classList.toggle('dark', dark)
     localStorage.setItem('dark', dark ? '1' : '0')
   }, [dark])
-  useEffect(() => { api.me().then((u) => { setUser(u); setReady(true) }) }, [])
+  useEffect(() => { api.me().then((u) => setUser(u)).catch(() => {}).finally(() => setReady(true)) }, [])
+  useEffect(() => { const f = () => setUser(null); window.addEventListener('saraha:logout', f); return () => window.removeEventListener('saraha:logout', f) }, [])
 
   const t = useCallback((k) => dict[lang][k] ?? k, [lang])
   const notify = useCallback((msg, type = 'ok') => { setToast({ msg, type }); setTimeout(() => setToast(null), 2600) }, [])
 
-  const value = { t, lang, setLang, dark, setDark, user, setUser, ready, notify }
+  // Translate an API error into the current language.
+  const te = useCallback((e) => {
+    const d = dict[lang], m = e?.message || ''
+    const map = [['Invalid email or password','errLogin'],['Email is not verified','errNotVerified'],['user already exists','errExists'],['No account found','errNoAccount'],
+      ['Invalid or expired OTP','errOtp'],['already verified','errAlreadyVerified'],['User not found','errUserNone'],['Refresh token','errSession'],['Authorization','errSession'],
+      ['Invalid token','errSession'],['Unsupported authorization','errSession'],['Password was changed','errPassChanged'],['too large','errTooBig'],['file','errFile']]
+    if (e?.status === 0) return d.errNetwork
+    if (e?.status === 429) return d.errRate
+    if (e?.status >= 500) return d.errServer
+    if (e?.status === 400 && e.errors?.length) return e.errors.map((x) => x.message).filter(Boolean).slice(0, 2).join(' · ') || d.errValidation
+    const hit = map.find(([k]) => m.toLowerCase().includes(k.toLowerCase()))
+    return hit ? d[hit[1]] : d.errGeneric
+  }, [lang])
+
+  const value = { te, t, lang, setLang, dark, setDark, user, setUser, ready, notify }
   return (
     <Ctx.Provider value={value}>
       {children}

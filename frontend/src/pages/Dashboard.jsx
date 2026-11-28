@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Copy, Check, Star, Trash2, Inbox, Mail, Heart } from 'lucide-react'
-import { api } from '../api.js'
+import { api, fullName } from '../api.js'
 import { useApp } from '../store.jsx'
 import { timeAgo } from '../components/ui.jsx'
 
@@ -10,16 +10,17 @@ export default function Dashboard() {
   const [msgs, setMsgs] = useState(null)
   const [tab, setTab] = useState('all')
   const [copied, setCopied] = useState(false)
-  const link = `${location.origin}/u/${user.username}`
-  const load = () => api.listMessages(user.id).then(setMsgs)
+  const link = `${location.origin}/u/${user.id}`
+  const load = () => api.messages.list(user.id).then(setMsgs)
   useEffect(() => { load() }, [])
-  const patch = async (m, p) => { await api.patchMessage(m.id, p); setMsgs(msgs.map((x) => (x.id === m.id ? { ...x, ...p } : x))) }
-  const del = async (m) => { await api.deleteMessage(m.id); setMsgs(msgs.filter((x) => x.id !== m.id)) }
+  const patch = async (m, p) => { await api.messages.patch(m.id, p); setMsgs(msgs.map((x) => (x.id === m.id ? { ...x, ...p } : x))) }
+  const del = async (m) => { await api.messages.remove(m.id); setMsgs(msgs.filter((x) => x.id !== m.id)) }
   const copy = () => { navigator.clipboard?.writeText(link); setCopied(true); notify(t('copied')); setTimeout(() => setCopied(false), 1800) }
   const list = (msgs || []).filter((m) => tab === 'all' || (tab === 'fav' ? m.fav : !m.read))
   const stats = msgs ? [[Inbox, t('total'), msgs.length], [Mail, t('newMsgs'), msgs.filter((m) => !m.read).length], [Heart, t('favCount'), msgs.filter((m) => m.fav).length]] : []
   return (
     <div className="space-y-6">
+      <h1 className="text-2xl font-extrabold">{fullName(user)} 👋</h1>
       <div className="card bg-gradient-to-br from-brand-600 to-fuchsia-600 !border-0 text-white">
         <p className="text-sm text-white/80">{t('yourLink')}</p>
         <div className="mt-2 flex flex-col gap-3 sm:flex-row">
@@ -32,6 +33,7 @@ export default function Dashboard() {
           <motion.div key={label} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -3 }} className="card !p-4 text-center"><Icon className="mx-auto text-brand-500" size={20} /><div className="mt-1 text-2xl font-extrabold">{n}</div><div className="text-xs text-slate-500">{label}</div></motion.div>
         ))}
       </div>
+      <p className="text-xs text-slate-400">{t('demoMsgs')}</p>
       <div className="flex gap-2">
         {[['all', t('all')], ['new', t('unread')], ['fav', t('favs')]].map(([k, l]) => (
           <button key={k} onClick={() => setTab(k)} className={`btn relative !py-1.5 ${tab === k ? 'text-white' : 'btn-outline'}`}>

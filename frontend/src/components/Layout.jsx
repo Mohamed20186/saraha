@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Moon, Sun, Languages, LogOut, MessageCircleHeart, Inbox, Settings } from 'lucide-react'
 import { useApp } from '../store.jsx'
 import { api } from '../api.js'
@@ -7,7 +8,7 @@ import { api } from '../api.js'
 export function Logo() {
   return (
     <Link to="/" className="flex items-center gap-2 text-lg font-extrabold">
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-600 to-fuchsia-600 text-white"><MessageCircleHeart size={20} /></span>
+      <span className="grid h-9 w-9 place-items-center rounded-xl transition-transform hover:rotate-6 hover:scale-110 bg-gradient-to-br from-brand-600 to-fuchsia-600 text-white"><MessageCircleHeart size={20} /></span>
       <span className="bg-gradient-to-r from-brand-600 to-fuchsia-600 bg-clip-text text-transparent">Saraha</span>
     </Link>
   )
@@ -29,7 +30,7 @@ export default function Layout({ children }) {
               <NavLink to="/settings" className={link}><Settings size={16} /><span className="hidden sm:inline">{t('settings')}</span></NavLink>
             </>}
             <button className="btn-ghost !px-3" onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} title="Language"><Languages size={16} /><span className="hidden sm:inline">{t('lang')}</span></button>
-            <button className="btn-ghost !px-3" onClick={() => setDark(!dark)} title={t('dark')}>{dark ? <Sun size={16} /> : <Moon size={16} />}</button>
+            <button className="btn-ghost !px-3" onClick={() => setDark(!dark)} title={t('dark')}><AnimatePresence mode="wait" initial={false}><motion.span key={String(dark)} initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: .15 }} className="inline-flex">{dark ? <Sun size={16} /> : <Moon size={16} />}</motion.span></AnimatePresence></button>
             {user ? <button className="btn-ghost !px-3" onClick={logout}><LogOut size={16} /><span className="hidden sm:inline">{t('logout')}</span></button>
               : <><Link to="/login" className="btn-ghost">{t('login')}</Link><Link to="/signup" className="btn-primary hidden sm:inline-flex">{t('signup')}</Link></>}
           </nav>

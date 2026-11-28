@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { api } from '../api.js'
 import { useApp } from '../store.jsx'
+import GoogleButton from '../components/GoogleButton.jsx'
 import { AuthCard, Field, Submit, ErrorBox } from '../components/ui.jsx'
 
 function useForm(initial) {
@@ -30,6 +31,7 @@ export function Login() {
         <Link to="/forgot" className="block text-sm text-brand-600">{t('forgot')}</Link>
         <Submit loading={f.loading}>{t('login')}</Submit>
       </form>
+      <GoogleButton />
     </AuthCard>
   )
 }
@@ -53,6 +55,7 @@ export function Signup() {
         <Field label={t('confirmPassword')} type="password" required autoComplete="new-password" {...f.on('confirmPassword')} />
         <Submit loading={f.loading}>{t('signup')}</Submit>
       </form>
+      <GoogleButton />
     </AuthCard>
   )
 }

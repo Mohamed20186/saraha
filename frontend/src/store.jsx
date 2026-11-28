@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { dict } from './i18n.js'
 import { api } from './api.js'
 
@@ -30,9 +31,9 @@ export function Providers({ children }) {
   return (
     <Ctx.Provider value={value}>
       {children}
-      {toast && (
-        <div className={`fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-pop rounded-xl px-4 py-3 text-sm font-medium text-white shadow-xl ${toast.type === 'err' ? 'bg-rose-600' : 'bg-slate-900 dark:bg-brand-600'}`}>{toast.msg}</div>
-      )}
+      <AnimatePresence>{toast && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center"><motion.div key={toast.msg} initial={{ opacity: 0, y: 24, scale: .95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12 }} className={`rounded-xl px-4 py-3 text-sm font-medium text-white shadow-xl ${toast.type === 'err' ? 'bg-rose-600' : 'bg-slate-900 dark:bg-brand-600'}`}>{toast.msg}</motion.div></div>
+      )}</AnimatePresence>
     </Ctx.Provider>
   )
 }

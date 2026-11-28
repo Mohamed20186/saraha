@@ -35,7 +35,7 @@ export default function App() {
         <Route path="/reset" element={<Reset />} />
         <Route path="/dashboard" element={<Private><Dashboard /></Private>} />
         <Route path="/settings" element={<Private><Settings /></Private>} />
-        <Route path="/u/:username" element={<PublicProfile />} />
+        <Route path="/u/:id" element={<PublicProfile />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       </Page></AnimatePresence>
